@@ -43,7 +43,7 @@
     .game-btn:active{transform:translateY(2px);box-shadow:0 2px 0 #d95777}
     .game-btn.secondary{background:#b7d9a7;color:#354b34;box-shadow:0 4px 0 #8db57d}
     .game-btn.time{background:#8874d8;box-shadow:0 4px 0 #6553b5}
-    .game-btn:disabled{opacity:.48;cursor:not--allowed;transform:none}
+    .game-btn:disabled{opacity:.48;cursor:not-allowed;transform:none}
     .time-choice[hidden]{display:none}
     .time-choice{padding-top:10px;border-top:1px dashed #eadce5}
     .game-message{text-align:center;min-height:1.5em;margin:12px 0 0;color:#765d66;font-weight:600}
@@ -182,7 +182,7 @@
     const cat = {x:112,y:ground-48,vy:0,w:48,h:48,onGround:true};
     let obstacles = [], snacksInAir = [];
     function loadCrystals(){try{return Math.max(0,Number(localStorage.getItem('catDashCrystals'))||0);}catch(e){return 0;}}
-    function saveCrystals(){try{localStorage.setItem('catDashCrystals',String(crystals));}catch(e){} crystalScore.textContent=crystals;}
+    function saveCrystals(){try{localStorage.setItem('catDashCrystals',String(crystals));}catch(e){} crystalScore.textContent=crystals;updateTimeButton();}
     function updateStats(){sausageScore.textContent=snacks;pineappleScore.textContent=pineapples;crystalScore.textContent=crystals;}
     function showTrades(show){afterControls.hidden=!show;reviveBtn.disabled=crystals<5;pineappleSausagesBtn.disabled=pineapples<1||traded;pineappleCrystalsBtn.disabled=pineapples<20||traded;sausageCrystalsBtn.disabled=snacks<20||traded;}
     function reset(){
@@ -215,7 +215,7 @@
       [timeForwardBtn,timeJumpBtn,timeBackwardBtn].forEach(b=>b.disabled=true);
       message.textContent=action==='jump'?'Выбрано: прыжок! Он начнётся, когда время снова пойдёт.':action==='backward'?'Выбрано движение назад! (3 💎)':'Выбрано движение вперёд!';
     }
-    function start(){reset();state='playing';last=performance.now();message.textContent='Go, kitty, go! 🐾';startBtn.textContent='↻ Restart';}
+    function start(){reset();state='playing';last=performance.now();message.textContent='Go, kitty, go! 🐾';startBtn.textContent='↻ Restart';updateTimeButton();}
     function end(){state='over';timeChoiceControls.hidden=true;message.textContent='Oh no! Your kitty bumped into a watermelon. You can revive or trade your goodies!';startBtn.textContent='↻ New game';showTrades(true);updateTimeButton();}
     function revive(){if(state!=='over'||crystals<5)return;crystals-=5;saveCrystals();state='playing';cat.y=ground-cat.h;cat.vy=0;cat.onGround=true;obstacles=[];snacksInAir=[];last=performance.now();showTrades(false);message.textContent='You used 5 crystals. Welcome back, kitty! 💎';}
     function tradePineapplesForSausages(){if(state!=='over'||traded||pineapples<1)return;snacks+=pineapples*2;pineapples=0;traded=true;updateStats();showTrades(true);message.textContent='Yum! Each pineapple became 2 sausages!';}
