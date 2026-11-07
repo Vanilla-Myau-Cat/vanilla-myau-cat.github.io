@@ -86,10 +86,10 @@
     <section class="game-section" aria-labelledby="game-title">
       <div class="section-head">
         <h2 id="game-title">🍖 Sausage Dash!</h2>
-        <p>Help the kitty collect sausages!</p>
+        <p>Help the kitty collect sausages and bonus pineapples!</p>
       </div>
       <div class="game-shell">
-        <p class="game-intro">Jump over the watermelons and catch the sausages floating in the air. Tap the game or press the jump button!</p>
+        <p class="game-intro">Jump over the watermelons, catch sausages, and grab pineapples 🍍 for 2 sausages! Tap the game or press the jump button!</p>
         <div class="game-stats">
           <div class="stat">🍖 Sausages: <span id="sausageScore">0</span></div>
           <div class="stat">🏃 Distance: <span id="distanceScore">0</span></div>
@@ -145,14 +145,14 @@
       ctx.fillStyle='#6eae62';for(let x=0;x<W;x+=38){ctx.fillRect((x-(elapsed*speed*.35)%38),ground+13,18,4);}
       // cat
       ctx.font='46px "Apple Color Emoji","Segoe UI Emoji",sans-serif';ctx.textAlign='center';ctx.textBaseline='middle';
-      ctx.fillText(state==='playing' && cat.onGround && Math.floor(elapsed*9)%2===0?'🐈':'🐈',cat.x+cat.w/2,cat.y+cat.h/2+1);
+      ctx.save();ctx.translate(cat.x+cat.w/2,0);ctx.scale(-1,1);ctx.fillText('🐈',0,cat.y+cat.h/2+1);ctx.restore();
       // watermelon obstacles
       obstacles.forEach(o=>{
         ctx.font='42px "Apple Color Emoji","Segoe UI Emoji",sans-serif';ctx.fillText('🍉',o.x+o.w/2,o.y+o.h/2);
       });
       // floating sausages
       snacksInAir.forEach(s=>{
-        ctx.font='34px "Apple Color Emoji","Segoe UI Emoji",sans-serif';ctx.fillText('🌭',s.x+s.w/2,s.y+s.h/2);
+        ctx.font='34px "Apple Color Emoji","Segoe UI Emoji",sans-serif';ctx.fillText(s.kind==='pineapple'?'🍍':'🌭',s.x+s.w/2,s.y+s.h/2);
         ctx.font='14px sans-serif';ctx.fillStyle='#d98a43';ctx.fillText('✦',s.x+s.w/2+13,s.y-7);
       });
       if(state==='ready' || state==='over'){
@@ -170,14 +170,14 @@
         if(cat.y>=ground-cat.h){cat.y=ground-cat.h;cat.vy=0;cat.onGround=true;}
         obstacleTimer+=dt;snackTimer+=dt;
         if(obstacleTimer>Math.max(.9,1.45-elapsed*.008)){obstacleTimer=0;obstacles.push({x:W+20,y:ground-43,w:45,h:43});}
-        if(snackTimer>1.15){snackTimer=0;snacksInAir.push({x:W+20,y:ground-105-Math.random()*62,w:40,h:35,taken:false});}
+        if(snackTimer>1.15){snackTimer=0;const pineapple=Math.random()<0.24;snacksInAir.push({x:W+20,y:ground-105-Math.random()*62,w:40,h:35,taken:false,kind:pineapple?'pineapple':'sausage'});}
         obstacles.forEach(o=>o.x-=speed*dt);
         snacksInAir.forEach(s=>s.x-=speed*dt);
         obstacles=obstacles.filter(o=>o.x>-60);
         snacksInAir=snacksInAir.filter(s=>s.x>-60&&!s.taken);
         const catBox={x:cat.x,y:cat.y,w:cat.w,h:cat.h};
         if(obstacles.some(o=>hit(catBox,o)))end();
-        snacksInAir.forEach(s=>{if(hit(catBox,s)){s.taken=true;snacks++;sausageScore.textContent=snacks;}});
+        snacksInAir.forEach(s=>{if(hit(catBox,s)){s.taken=true;snacks+=s.kind==='pineapple'?2:1;sausageScore.textContent=snacks;}});
       }
       draw();requestAnimationFrame(frame);
     }
