@@ -42,6 +42,10 @@
     .game-btn{border:0;border-radius:999px;padding:13px 23px;font:inherit;font-weight:800;cursor:pointer;background:#ff7895;color:white;box-shadow:0 4px 0 #d95777}
     .game-btn:active{transform:translateY(2px);box-shadow:0 2px 0 #d95777}
     .game-btn.secondary{background:#b7d9a7;color:#354b34;box-shadow:0 4px 0 #8db57d}
+    .game-btn.time{background:#8874d8;box-shadow:0 4px 0 #6553b5}
+    .game-btn:disabled{opacity:.48;cursor:not--allowed;transform:none}
+    .time-choice[hidden]{display:none}
+    .time-choice{padding-top:10px;border-top:1px dashed #eadce5}
     .game-message{text-align:center;min-height:1.5em;margin:12px 0 0;color:#765d66;font-weight:600}
     .site-version{width:fit-content;max-width:92%;margin:0 auto 22px;padding:10px 16px;border-radius:999px;background:#fff;border:1px solid #f1d6dd;color:#765d66;text-align:center;font-size:.92rem;font-weight:700}
     .site-version.pending{background:#fff5d9;border-color:#f0d48b;color:#795c19}
@@ -104,6 +108,12 @@
         <div class="game-controls">
           <button class="game-btn" id="startGame" type="button">▶ Start game</button>
           <button class="game-btn secondary" id="jumpGame" type="button">⬆ Jump!</button>
+          <button class="game-btn time" id="stopTimeGame" type="button">⏳ Stop time (10 💎)</button>
+        </div>
+        <div class="game-controls time-choice" id="timeChoiceControls" hidden>
+          <button class="game-btn secondary" id="timeForward" type="button">➡ Forward</button>
+          <button class="game-btn secondary" id="timeJump" type="button">⬆ Jump after stop</button>
+          <button class="game-btn time" id="timeBackward" type="button">⬅ Backward (3 💎)</button>
         </div>
         <div class="game-controls" id="afterGameControls" hidden>
           <button class="game-btn secondary" id="reviveGame" type="button">💎 Revive (5 crystals)</button>
@@ -124,6 +134,11 @@
     const ctx = canvas.getContext('2d');
     const startBtn = document.getElementById('startGame');
     const jumpBtn = document.getElementById('jumpGame');
+    const stopTimeBtn = document.getElementById('stopTimeGame');
+    const timeChoiceControls = document.getElementById('timeChoiceControls');
+    const timeForwardBtn = document.getElementById('timeForward');
+    const timeJumpBtn = document.getElementById('timeJump');
+    const timeBackwardBtn = document.getElementById('timeBackward');
     const message = document.getElementById('gameMessage');
     const sausageScore = document.getElementById('sausageScore');
     const distanceScore = document.getElementById('distanceScore');
@@ -163,6 +178,7 @@
     }
     let state = 'ready', last = 0, elapsed = 0, obstacleTimer = 0, snackTimer = 0;
     let distance = 0, snacks = 0, pineapples = 0, crystals = loadCrystals(), speed = 330, traded = false;
+    let timeStopRemaining = 0, pendingTimeAction = null, direction = 1, backwardJumps = 0;
     const cat = {x:112,y:ground-48,vy:0,w:48,h:48,onGround:true};
     let obstacles = [], snacksInAir = [];
     function loadCrystals(){try{return Math.max(0,Number(localStorage.getItem('catDashCrystals'))||0);}catch(e){return 0;}}
@@ -171,16 +187,36 @@
     function showTrades(show){afterControls.hidden=!show;reviveBtn.disabled=crystals<5;pineappleSausagesBtn.disabled=pineapples<1||traded;pineappleCrystalsBtn.disabled=pineapples<20||traded;sausageCrystalsBtn.disabled=snacks<20||traded;}
     function reset(){
       elapsed=0; obstacleTimer=0; snackTimer=0; distance=0; snacks=0; pineapples=0; speed=330;traded=false;
+      timeStopRemaining=0;pendingTimeAction=null;direction=1;backwardJumps=0;timeChoiceControls.hidden=true;
       cat.y=ground-cat.h; cat.vy=0; cat.onGround=true; obstacles=[]; snacksInAir=[];
-      distanceScore.textContent='0';updateStats();showTrades(false);
+      distanceScore.textContent='0';updateStats();showTrades(false);updateTimeButton();
     }
+    function updateTimeButton(){stopTimeBtn.disabled=state!=='playing'||crystals<10;}
     function jump(){
       if(state==='ready'){start();return;}
       if(state!=='playing')return;
-      if(cat.onGround){cat.vy=-690;cat.onGround=false;}
+      if(cat.onGround){cat.vy=-690;cat.onGround=false;if(direction===-1)backwardJumps++;}
+    }
+    function stopTime(){
+      if(state!=='playing'||crystals<10)return;
+      crystals-=10;saveCrystals();state='timeStopped';timeStopRemaining=10;pendingTimeAction=null;
+      timeChoiceControls.hidden=false;[timeForwardBtn,timeJumpBtn,timeBackwardBtn].forEach(b=>b.disabled=false);
+      message.textContent='⏳ Время остановлено на 10 секунд! Выбери следующий шаг.';updateTimeButton();
+    }
+    function chooseTimeAction(action){
+      if(state!=='timeStopped'||pendingTimeAction)return;
+      if(action==='backward'){
+        if(crystals<3){message.textContent='Нужно ещё 3 кристалла для движения назад!';return;}
+        crystals-=3;saveCrystals();direction=-1;backwardJumps=0;
+      }else if(action==='forward'){
+        direction=1;backwardJumps=0;
+      }
+      pendingTimeAction=action;
+      [timeForwardBtn,timeJumpBtn,timeBackwardBtn].forEach(b=>b.disabled=true);
+      message.textContent=action==='jump'?'Выбрано: прыжок! Он начнётся, когда время снова пойдёт.':action==='backward'?'Выбрано движение назад! (3 💎)':'Выбрано движение вперёд!';
     }
     function start(){reset();state='playing';last=performance.now();message.textContent='Go, kitty, go! 🐾';startBtn.textContent='↻ Restart';}
-    function end(){state='over';message.textContent='Oh no! Your kitty bumped into a watermelon. You can revive or trade your goodies!';startBtn.textContent='↻ New game';showTrades(true);}
+    function end(){state='over';timeChoiceControls.hidden=true;message.textContent='Oh no! Your kitty bumped into a watermelon. You can revive or trade your goodies!';startBtn.textContent='↻ New game';showTrades(true);updateTimeButton();}
     function revive(){if(state!=='over'||crystals<5)return;crystals-=5;saveCrystals();state='playing';cat.y=ground-cat.h;cat.vy=0;cat.onGround=true;obstacles=[];snacksInAir=[];last=performance.now();showTrades(false);message.textContent='You used 5 crystals. Welcome back, kitty! 💎';}
     function tradePineapplesForSausages(){if(state!=='over'||traded||pineapples<1)return;snacks+=pineapples*2;pineapples=0;traded=true;updateStats();showTrades(true);message.textContent='Yum! Each pineapple became 2 sausages!';}
     function tradePineapplesForCrystals(){if(state!=='over'||traded||pineapples<20)return;const batches=Math.floor(pineapples/20);pineapples-=batches*20;crystals+=batches*5;saveCrystals();traded=true;updateStats();showTrades(true);message.textContent='Sparkly! 20 pineapples became 5 crystals per batch!';}
@@ -230,7 +266,7 @@
       ctx.fillStyle='#8fc77e';ctx.fillRect(0,ground, W,H-ground);
       ctx.fillStyle='#6eae62';for(let x=0;x<W;x+=38){ctx.fillRect((x-(elapsed*speed*.35)%38),ground+13,18,4);}
       // Animated black kitty: alternating running legs, splayed legs while jumping
-      drawCat(cat.x+cat.w/2,cat.y+cat.h/2,elapsed,state==='playing'&&!cat.onGround);
+      ctx.save();ctx.translate(cat.x+cat.w/2,cat.y+cat.h/2);ctx.scale(direction,1);drawCat(0,0,elapsed,state==='playing'&&!cat.onGround);ctx.restore();
 
       // watermelon obstacles
       obstacles.forEach(o=>{
@@ -241,6 +277,11 @@
         ctx.font='34px "Apple Color Emoji","Segoe UI Emoji",sans-serif';ctx.fillText(s.kind==='pineapple'?'🍍':s.kind==='crystal'?'💎':'🌭',s.x+s.w/2,s.y+s.h/2);
         ctx.font='14px sans-serif';ctx.fillStyle='#d98a43';ctx.fillText('✦',s.x+s.w/2+13,s.y-7);
       });
+      if(state==='timeStopped'){
+        ctx.fillStyle='#49343dcc';roundedRect(235,82,330,100,20,'#ffffffed');
+        ctx.fillStyle='#49343d';ctx.textAlign='center';ctx.font='bold 24px system-ui';ctx.fillText('⏳ TIME STOPPED',400,117);
+        ctx.font='bold 30px system-ui';ctx.fillText(Math.max(0,timeStopRemaining).toFixed(1)+' s',400,154);ctx.textAlign='start';
+      }
       if(state==='ready' || state==='over'){
         ctx.fillStyle='#49343dcc';roundedRect(210,92,380,78,20,'#ffffffdf');
         ctx.fillStyle='#49343d';ctx.font='bold 25px system-ui';ctx.fillText(state==='ready'?'Ready, set, MEOW!':'Game over!',400,121);
@@ -249,11 +290,20 @@
     }
     function frame(now){
       const dt=Math.min((now-last)/1000||0,0.035);last=now;
-      if(state==='playing'){
+      if(state==='timeStopped'){
+        timeStopRemaining=Math.max(0,timeStopRemaining-dt);
+        if(timeStopRemaining===0){
+          state='playing';timeChoiceControls.hidden=true;
+          const action=pendingTimeAction||'forward';pendingTimeAction=null;
+          if(action==='jump'){if(cat.onGround){cat.vy=-690;cat.onGround=false;if(direction===-1)backwardJumps++;}}
+          message.textContent=action==='backward'?'Время пошло! Кот бежит назад. ⬅':action==='jump'?'Время пошло! Котик прыгает! ⬆':'Время пошло! Котик бежит вперёд! ➡';
+          updateTimeButton();
+        }
+      }else if(state==='playing'){
         elapsed+=dt;speed=330+Math.min(elapsed*10,190);distance=Math.floor(elapsed*10);
         distanceScore.textContent=distance;
         cat.vy+=1650*dt;cat.y+=cat.vy*dt;
-        if(cat.y>=ground-cat.h){cat.y=ground-cat.h;cat.vy=0;cat.onGround=true;}
+        if(cat.y>=ground-cat.h){cat.y=ground-cat.h;cat.vy=0;cat.onGround=true;if(direction===-1&&backwardJumps>=5){direction=1;backwardJumps=0;message.textContent='Пятый прыжок завершён — кот снова бежит вперёд! ➡';}}
         obstacleTimer+=dt;snackTimer+=dt;
         if(obstacleTimer>Math.max(.9,1.45-elapsed*.008)){obstacleTimer=0;obstacles.push({x:W+20,y:ground-43,w:45,h:43});}
         if(snackTimer>1.05){snackTimer=0;const roll=Math.random();const kind=roll<0.15?'crystal':roll<0.38?'pineapple':'sausage';snacksInAir.push({x:W+20,y:ground-105-Math.random()*62,w:40,h:35,taken:false,kind});}
@@ -272,9 +322,13 @@
     pineappleSausagesBtn.addEventListener('click',tradePineapplesForSausages);
     pineappleCrystalsBtn.addEventListener('click',tradePineapplesForCrystals);
     sausageCrystalsBtn.addEventListener('click',tradeSausagesForCrystal);
-    updateStats();showTrades(false);
+    updateStats();showTrades(false);updateTimeButton();
     checkPublishedVersion();
     jumpBtn.addEventListener('click',jump);
+    stopTimeBtn.addEventListener('click',stopTime);
+    timeForwardBtn.addEventListener('click',()=>chooseTimeAction('forward'));
+    timeJumpBtn.addEventListener('click',()=>chooseTimeAction('jump'));
+    timeBackwardBtn.addEventListener('click',()=>chooseTimeAction('backward'));
     canvas.addEventListener('pointerdown',jump);
     window.addEventListener('keydown',e=>{if(e.code==='Space'||e.code==='ArrowUp'){e.preventDefault();jump();}});
     draw();requestAnimationFrame(t=>{last=t;requestAnimationFrame(frame);});
