@@ -177,16 +177,18 @@
       }
     }
     let state = 'ready', last = 0, elapsed = 0, obstacleTimer = 0, snackTimer = 0;
-    let distance = 0, snacks = 0, pineapples = 0, crystals = loadCrystals(), speed = 330, traded = false;
+    let distance = 0, snacks = loadLoot('catDashSausages'), pineapples = loadLoot('catDashPineapples'), crystals = loadCrystals(), speed = 330, traded = false;
     let timeStopRemaining = 0, pendingTimeAction = null, direction = 1, backwardJumps = 0;
     const cat = {x:112,y:ground-48,vy:0,w:48,h:48,onGround:true};
     let obstacles = [], snacksInAir = [];
+    function loadLoot(key){try{return Math.max(0,Number(localStorage.getItem(key))||0);}catch(e){return 0;}}
+    function saveLoot(){try{localStorage.setItem('catDashSausages',String(snacks));localStorage.setItem('catDashPineapples',String(pineapples));}catch(e){}}
     function loadCrystals(){try{return Math.max(0,Number(localStorage.getItem('catDashCrystals'))||0);}catch(e){return 0;}}
     function saveCrystals(){try{localStorage.setItem('catDashCrystals',String(crystals));}catch(e){} crystalScore.textContent=crystals;updateTimeButton();}
     function updateStats(){sausageScore.textContent=snacks;pineappleScore.textContent=pineapples;crystalScore.textContent=crystals;}
     function showTrades(show){afterControls.hidden=!show;reviveBtn.disabled=crystals<5;pineappleSausagesBtn.disabled=pineapples<1||traded;pineappleCrystalsBtn.disabled=pineapples<20||traded;sausageCrystalsBtn.disabled=snacks<20||traded;}
     function reset(){
-      elapsed=0; obstacleTimer=0; snackTimer=0; distance=0; snacks=0; pineapples=0; speed=330;traded=false;
+      elapsed=0; obstacleTimer=0; snackTimer=0; distance=0; speed=330;traded=false;
       timeStopRemaining=0;pendingTimeAction=null;direction=1;backwardJumps=0;timeChoiceControls.hidden=true;
       cat.y=ground-cat.h; cat.vy=0; cat.onGround=true; obstacles=[]; snacksInAir=[];
       distanceScore.textContent='0';updateStats();showTrades(false);updateTimeButton();
@@ -218,9 +220,9 @@
     function start(){reset();state='playing';last=performance.now();message.textContent='Go, kitty, go! 🐾';startBtn.textContent='↻ Restart';updateTimeButton();}
     function end(){state='over';timeChoiceControls.hidden=true;message.textContent='Oh no! Your kitty bumped into a watermelon. You can revive or trade your goodies!';startBtn.textContent='↻ New game';showTrades(true);updateTimeButton();}
     function revive(){if(state!=='over'||crystals<5)return;crystals-=5;saveCrystals();state='playing';cat.y=ground-cat.h;cat.vy=0;cat.onGround=true;obstacles=[];snacksInAir=[];last=performance.now();showTrades(false);message.textContent='You used 5 crystals. Welcome back, kitty! 💎';}
-    function tradePineapplesForSausages(){if(state!=='over'||traded||pineapples<1)return;snacks+=pineapples*2;pineapples=0;traded=true;updateStats();showTrades(true);message.textContent='Yum! Each pineapple became 2 sausages!';}
-    function tradePineapplesForCrystals(){if(state!=='over'||traded||pineapples<20)return;const batches=Math.floor(pineapples/20);pineapples-=batches*20;crystals+=batches*5;saveCrystals();traded=true;updateStats();showTrades(true);message.textContent='Sparkly! 20 pineapples became 5 crystals per batch!';}
-    function tradeSausagesForCrystal(){if(state!=='over'||traded||snacks<20)return;const batches=Math.floor(snacks/20);snacks-=batches*20;crystals+=batches;saveCrystals();traded=true;updateStats();showTrades(true);message.textContent='20 sausages traded for 1 crystal per batch!';}
+    function tradePineapplesForSausages(){if(state!=='over'||traded||pineapples<1)return;snacks+=pineapples*2;pineapples=0;saveLoot();traded=true;updateStats();showTrades(true);message.textContent='Yum! Each pineapple became 2 sausages!';}
+    function tradePineapplesForCrystals(){if(state!=='over'||traded||pineapples<20)return;const batches=Math.floor(pineapples/20);pineapples-=batches*20;crystals+=batches*5;saveLoot();saveCrystals();traded=true;updateStats();showTrades(true);message.textContent='Sparkly! 20 pineapples became 5 crystals per batch!';}
+    function tradeSausagesForCrystal(){if(state!=='over'||traded||snacks<20)return;const batches=Math.floor(snacks/20);snacks-=batches*20;crystals+=batches;saveLoot();saveCrystals();traded=true;updateStats();showTrades(true);message.textContent='20 sausages traded for 1 crystal per batch!';}
     function hit(a,b){return a.x+9 < b.x+b.w-7 && a.x+a.w-9 > b.x+7 && a.y+8 < b.y+b.h-5 && a.y+a.h-5 > b.y+5;}
     function roundedRect(x,y,w,h,r,color){ctx.fillStyle=color;ctx.beginPath();ctx.roundRect(x,y,w,h,r);ctx.fill();}
     function drawCat(cx,cy,time,jumping){
@@ -313,7 +315,7 @@
         snacksInAir=snacksInAir.filter(s=>s.x>-60&&!s.taken);
         const catBox={x:cat.x,y:cat.y,w:cat.w,h:cat.h};
         if(obstacles.some(o=>hit(catBox,o)))end();
-        snacksInAir.forEach(s=>{if(hit(catBox,s)){s.taken=true;if(s.kind==='pineapple')pineapples++;else if(s.kind==='crystal'){crystals++;saveCrystals();}else snacks++;updateStats();}});
+        snacksInAir.forEach(s=>{if(hit(catBox,s)){s.taken=true;if(s.kind==='pineapple')pineapples++;else if(s.kind==='crystal'){crystals++;saveCrystals();}else snacks++;if(s.kind!=='crystal')saveLoot();updateStats();}});
       }
       draw();requestAnimationFrame(frame);
     }
