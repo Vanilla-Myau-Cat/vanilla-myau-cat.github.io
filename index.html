@@ -157,6 +157,36 @@
     function tradeSausagesForCrystal(){if(state!=='over'||traded||snacks<20)return;const batches=Math.floor(snacks/20);snacks-=batches*20;crystals+=batches;saveCrystals();traded=true;updateStats();showTrades(true);message.textContent='20 sausages traded for 1 crystal per batch!';}
     function hit(a,b){return a.x+9 < b.x+b.w-7 && a.x+a.w-9 > b.x+7 && a.y+8 < b.y+b.h-5 && a.y+a.h-5 > b.y+5;}
     function roundedRect(x,y,w,h,r,color){ctx.fillStyle=color;ctx.beginPath();ctx.roundRect(x,y,w,h,r);ctx.fill();}
+    function drawCat(cx,cy,time,jumping){
+      ctx.save();
+      ctx.translate(cx,cy);
+      ctx.scale(-1,1); // keep the kitty facing the same direction as before
+      const run=Math.sin(time*17);
+      // Curled tail swishes as the kitty runs
+      ctx.strokeStyle='#17151d';ctx.lineWidth=5;ctx.lineCap='round';
+      ctx.beginPath();ctx.moveTo(-17,5);ctx.quadraticCurveTo(-29,-2+run*3,-25,-15+run*2);ctx.stroke();
+      // Body
+      ctx.fillStyle='#17151d';
+      ctx.beginPath();ctx.ellipse(-1,3,19,12,-.12,0,Math.PI*2);ctx.fill();
+      // Head and pointy ears
+      ctx.beginPath();ctx.arc(14,-8,12,0,Math.PI*2);ctx.fill();
+      ctx.beginPath();ctx.moveTo(6,-16);ctx.lineTo(7,-29);ctx.lineTo(15,-18);ctx.closePath();ctx.fill();
+      ctx.beginPath();ctx.moveTo(16,-18);ctx.lineTo(25,-28);ctx.lineTo(25,-12);ctx.closePath();ctx.fill();
+      // Tiny golden eyes and nose
+      ctx.fillStyle='#f8df83';ctx.beginPath();ctx.arc(18,-9,1.8,0,Math.PI*2);ctx.fill();
+      ctx.fillStyle='#f4a0b2';ctx.beginPath();ctx.arc(25,-5,1.5,0,Math.PI*2);ctx.fill();
+      // Legs: alternate while running; stretch out to the sides in mid-air
+      ctx.strokeStyle='#17151d';ctx.lineWidth=5;ctx.lineCap='round';
+      if(jumping){
+        ctx.beginPath();ctx.moveTo(-10,10);ctx.lineTo(-19,19);ctx.lineTo(-25,16);ctx.stroke();
+        ctx.beginPath();ctx.moveTo(8,10);ctx.lineTo(17,20);ctx.lineTo(23,17);ctx.stroke();
+      }else{
+        const swing=run*7;
+        ctx.beginPath();ctx.moveTo(-10,10);ctx.lineTo(-12+swing,19);ctx.lineTo(-17+swing,21);ctx.stroke();
+        ctx.beginPath();ctx.moveTo(8,10);ctx.lineTo(10-swing,19);ctx.lineTo(15-swing,21);ctx.stroke();
+      }
+      ctx.restore();
+    }
     function draw(){
       ctx.clearRect(0,0,W,H);
       // soft clouds
@@ -166,9 +196,9 @@
       ctx.fillStyle='#d8edc8';ctx.beginPath();ctx.moveTo(0,190);ctx.quadraticCurveTo(180,130,350,190);ctx.quadraticCurveTo(590,130,800,185);ctx.lineTo(800,280);ctx.lineTo(0,280);ctx.fill();
       ctx.fillStyle='#8fc77e';ctx.fillRect(0,ground, W,H-ground);
       ctx.fillStyle='#6eae62';for(let x=0;x<W;x+=38){ctx.fillRect((x-(elapsed*speed*.35)%38),ground+13,18,4);}
-      // cat
-      ctx.font='46px "Apple Color Emoji","Segoe UI Emoji",sans-serif';ctx.textAlign='center';ctx.textBaseline='middle';
-      ctx.save();ctx.translate(cat.x+cat.w/2,0);ctx.scale(-1,1);ctx.fillText('🐈‍⬛',0,cat.y+cat.h/2+1);ctx.restore();
+      // Animated black kitty: alternating running legs, splayed legs while jumping
+      drawCat(cat.x+cat.w/2,cat.y+cat.h/2,elapsed,state==='playing'&&!cat.onGround);
+
       // watermelon obstacles
       obstacles.forEach(o=>{
         ctx.font='42px "Apple Color Emoji","Segoe UI Emoji",sans-serif';ctx.fillText('🍉',o.x+o.w/2,o.y+o.h/2);
