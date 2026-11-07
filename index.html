@@ -43,6 +43,9 @@
     .game-btn:active{transform:translateY(2px);box-shadow:0 2px 0 #d95777}
     .game-btn.secondary{background:#b7d9a7;color:#354b34;box-shadow:0 4px 0 #8db57d}
     .game-message{text-align:center;min-height:1.5em;margin:12px 0 0;color:#765d66;font-weight:600}
+    .site-version{width:fit-content;max-width:92%;margin:0 auto 22px;padding:10px 16px;border-radius:999px;background:#fff;border:1px solid #f1d6dd;color:#765d66;text-align:center;font-size:.92rem;font-weight:700}
+    .site-version.pending{background:#fff5d9;border-color:#f0d48b;color:#795c19}
+    .site-version.current{background:#eff9eb;border-color:#cce5c2;color:#42663b}
 \n    footer{text-align:center;padding:25px 12px 38px;color:#8b747c;font-size:.9rem}
     a{color:#bd4d70}
     @media(prefers-reduced-motion:reduce){.card{transition:none}.card:hover{transform:none}}
@@ -56,6 +59,7 @@
     <div class="hero-art" aria-label="Cat and watermelon">🐱 🍉</div>
   </header>
   <main class="wrap">
+    <div id="siteVersion" class="site-version" role="status" aria-live="polite">🔎 Проверяем, обновился ли сайт…</div>
     <div class="section-head">
       <h2>Meet the snack squad</h2>
       <p>Four fluffy (and not-so-fluffy) friends!</p>
@@ -131,6 +135,32 @@
     const pineappleCrystalsBtn = document.getElementById('pineappleCrystals');
     const sausageCrystalsBtn = document.getElementById('sausageCrystals');
     const W = canvas.width, H = canvas.height, ground = 224;
+    const versionBadge = document.getElementById('siteVersion');
+    async function checkPublishedVersion(){
+      try{
+        const headers={Accept:'application/vnd.github+json'};
+        const [commitResponse,deploymentResponse]=await Promise.all([
+          fetch('https://api.github.com/repos/Vanilla-Myau-Cat/vanilla-myau-cat.github.io/commits?per_page=1',{headers,cache:'no-store'}),
+          fetch('https://api.github.com/repos/Vanilla-Myau-Cat/vanilla-myau-cat.github.io/pages/deployments/latest',{headers,cache:'no-store'})
+        ]);
+        if(!commitResponse.ok||!deploymentResponse.ok)throw new Error('Version check unavailable');
+        const commits=await commitResponse.json();
+        const deployment=await deploymentResponse.json();
+        const latestCommit=commits[0]?.sha;
+        const publishedCommit=deployment.sha;
+        if(!latestCommit||!publishedCommit)throw new Error('Version information missing');
+        if(latestCommit===publishedCommit){
+          versionBadge.className='site-version current';
+          versionBadge.textContent='✅ Сайт обновлён до последней версии!';
+        }else{
+          versionBadge.className='site-version pending';
+          versionBadge.textContent='⏳ В GitHub уже есть новая версия — сайт ещё обновляется.';
+        }
+      }catch(error){
+        versionBadge.className='site-version';
+        versionBadge.textContent='ℹ️ Пока не получилось проверить обновление сайта.';
+      }
+    }
     let state = 'ready', last = 0, elapsed = 0, obstacleTimer = 0, snackTimer = 0;
     let distance = 0, snacks = 0, pineapples = 0, crystals = loadCrystals(), speed = 330, traded = false;
     const cat = {x:112,y:ground-48,vy:0,w:48,h:48,onGround:true};
@@ -160,7 +190,7 @@
     function drawCat(cx,cy,time,jumping){
       ctx.save();
       ctx.translate(cx,cy);
-      ctx.scale(-1,1); // keep the kitty facing the same direction as before
+      // The face is drawn toward the right, so the kitty runs forward.
       const run=Math.sin(time*17);
       // Curled tail swishes as the kitty runs
       ctx.strokeStyle='#17151d';ctx.lineWidth=5;ctx.lineCap='round';
@@ -172,18 +202,21 @@
       ctx.beginPath();ctx.arc(14,-8,12,0,Math.PI*2);ctx.fill();
       ctx.beginPath();ctx.moveTo(6,-16);ctx.lineTo(7,-29);ctx.lineTo(15,-18);ctx.closePath();ctx.fill();
       ctx.beginPath();ctx.moveTo(16,-18);ctx.lineTo(25,-28);ctx.lineTo(25,-12);ctx.closePath();ctx.fill();
-      // Tiny golden eyes and nose
+      // Tiny golden eye and nose
       ctx.fillStyle='#f8df83';ctx.beginPath();ctx.arc(18,-9,1.8,0,Math.PI*2);ctx.fill();
       ctx.fillStyle='#f4a0b2';ctx.beginPath();ctx.arc(25,-5,1.5,0,Math.PI*2);ctx.fill();
-      // Legs: alternate while running; stretch out to the sides in mid-air
-      ctx.strokeStyle='#17151d';ctx.lineWidth=5;ctx.lineCap='round';
+      // Four little legs: two back legs and two front legs.
+      ctx.strokeStyle='#17151d';ctx.lineWidth=4.5;ctx.lineCap='round';ctx.lineJoin='round';
       if(jumping){
-        ctx.beginPath();ctx.moveTo(-10,10);ctx.lineTo(-19,19);ctx.lineTo(-25,16);ctx.stroke();
-        ctx.beginPath();ctx.moveTo(8,10);ctx.lineTo(17,20);ctx.lineTo(23,17);ctx.stroke();
+        [[-12,-21,19,-27,17],[-4,-13,21,-18,20],[8,12,20,18,17],[15,17,22,24,17]].forEach(([x1,x2,y1,x3,y2])=>{
+          ctx.beginPath();ctx.moveTo(x1,10);ctx.lineTo(x2,y1);ctx.lineTo(x3,y2);ctx.stroke();
+        });
       }else{
-        const swing=run*7;
-        ctx.beginPath();ctx.moveTo(-10,10);ctx.lineTo(-12+swing,19);ctx.lineTo(-17+swing,21);ctx.stroke();
-        ctx.beginPath();ctx.moveTo(8,10);ctx.lineTo(10-swing,19);ctx.lineTo(15-swing,21);ctx.stroke();
+        const swing=run*6;
+        ctx.beginPath();ctx.moveTo(-13,9);ctx.lineTo(-15+swing,17);ctx.lineTo(-18+swing,21);ctx.stroke();
+        ctx.beginPath();ctx.moveTo(-4,11);ctx.lineTo(-5-swing,18);ctx.lineTo(-8-swing,22);ctx.stroke();
+        ctx.beginPath();ctx.moveTo(8,10);ctx.lineTo(10-swing,18);ctx.lineTo(13-swing,22);ctx.stroke();
+        ctx.beginPath();ctx.moveTo(15,8);ctx.lineTo(17+swing,17);ctx.lineTo(20+swing,21);ctx.stroke();
       }
       ctx.restore();
     }
@@ -240,6 +273,7 @@
     pineappleCrystalsBtn.addEventListener('click',tradePineapplesForCrystals);
     sausageCrystalsBtn.addEventListener('click',tradeSausagesForCrystal);
     updateStats();showTrades(false);
+    checkPublishedVersion();
     jumpBtn.addEventListener('click',jump);
     canvas.addEventListener('pointerdown',jump);
     window.addEventListener('keydown',e=>{if(e.code==='Space'||e.code==='ArrowUp'){e.preventDefault();jump();}});
