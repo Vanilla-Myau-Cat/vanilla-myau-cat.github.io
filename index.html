@@ -183,6 +183,47 @@
     let obstacles = [], snacksInAir = [];
     function loadLoot(key){try{return Math.max(0,Number(localStorage.getItem(key))||0);}catch(e){return 0;}}
     function saveLoot(){try{localStorage.setItem('catDashSausages',String(snacks));localStorage.setItem('catDashPineapples',String(pineapples));}catch(e){}}
+    let audioContext = null;
+    function unlockAudio(){
+      try{
+        const AudioCtor=window.AudioContext||window.webkitAudioContext;
+        if(AudioCtor){if(!audioContext)audioContext=new AudioCtor();if(audioContext.state==='suspended')audioContext.resume();}
+      }catch(e){}
+    }
+    function sayCat(text,rate=1,pitch=1.25){
+      try{
+        if(!('speechSynthesis' in window)||!('SpeechSynthesisUtterance' in window))return;
+        window.speechSynthesis.cancel();
+        const voiceLine=new SpeechSynthesisUtterance(text);
+        voiceLine.lang='ru-RU';voiceLine.rate=rate;voiceLine.pitch=pitch;voiceLine.volume=1;
+        const voices=window.speechSynthesis.getVoices();
+        const russianVoice=voices.find(v=>v.lang&&v.lang.toLowerCase().startsWith('ru'));
+        if(russianVoice)voiceLine.voice=russianVoice;
+        window.speechSynthesis.speak(voiceLine);
+      }catch(e){}
+    }
+    function playTone(frequency,start,duration,type='sine',volume=0.10){
+      if(!audioContext)return;
+      try{
+        const oscillator=audioContext.createOscillator();
+        const gain=audioContext.createGain();
+        oscillator.type=type;oscillator.frequency.setValueAtTime(frequency,audioContext.currentTime+start);
+        gain.gain.setValueAtTime(0.0001,audioContext.currentTime+start);
+        gain.gain.exponentialRampToValueAtTime(volume,audioContext.currentTime+start+0.025);
+        gain.gain.exponentialRampToValueAtTime(0.0001,audioContext.currentTime+start+duration);
+        oscillator.connect(gain);gain.connect(audioContext.destination);
+        oscillator.start(audioContext.currentTime+start);oscillator.stop(audioContext.currentTime+start+duration+0.03);
+      }catch(e){}
+    }
+    function soundSausage(){unlockAudio();sayCat('Мяу!',1.05,1.35);}
+    function soundPineapple(){unlockAudio();sayCat('Мррр, мяу, мяф!',0.9,1.2);}
+    function soundHiss(){unlockAudio();sayCat('Шшшш!',0.85,0.75);}
+    function soundCrystal(){
+      unlockAudio();
+      const notes=[659.25,783.99,987.77,1174.66,987.77,1174.66,1318.51,1567.98];
+      notes.forEach((note,i)=>playTone(note,i*0.36,0.42,'triangle',0.095));
+      sayCat('УРААААА!',0.78,1.45);
+    }
     function loadCrystals(){try{return Math.max(0,Number(localStorage.getItem('catDashCrystals'))||0);}catch(e){return 0;}}
     function saveCrystals(){try{localStorage.setItem('catDashCrystals',String(crystals));}catch(e){} crystalScore.textContent=crystals;updateTimeButton();}
     function updateStats(){sausageScore.textContent=snacks;pineappleScore.textContent=pineapples;crystalScore.textContent=crystals;}
@@ -217,8 +258,8 @@
       [timeForwardBtn,timeJumpBtn,timeBackwardBtn].forEach(b=>b.disabled=true);
       message.textContent=action==='jump'?'Выбрано: прыжок! Он начнётся, когда время снова пойдёт.':action==='backward'?'Выбрано движение назад! (3 💎)':'Выбрано движение вперёд!';
     }
-    function start(){reset();state='playing';last=performance.now();message.textContent='Go, kitty, go! 🐾';startBtn.textContent='↻ Restart';updateTimeButton();}
-    function end(){state='over';timeChoiceControls.hidden=true;message.textContent='Oh no! Your kitty bumped into a watermelon. You can revive or trade your goodies!';startBtn.textContent='↻ New game';showTrades(true);updateTimeButton();}
+    function start(){unlockAudio();reset();state='playing';last=performance.now();message.textContent='Go, kitty, go! 🐾';startBtn.textContent='↻ Restart';updateTimeButton();}
+    function end(){if(state!=='playing')return;soundHiss();state='over';timeChoiceControls.hidden=true;message.textContent='Oh no! Your kitty bumped into a watermelon. You can revive or trade your goodies!';startBtn.textContent='↻ New game';showTrades(true);updateTimeButton();}
     function revive(){if(state!=='over'||crystals<5)return;crystals-=5;saveCrystals();state='playing';cat.y=ground-cat.h;cat.vy=0;cat.onGround=true;obstacles=[];snacksInAir=[];last=performance.now();showTrades(false);message.textContent='You used 5 crystals. Welcome back, kitty! 💎';}
     function tradePineapplesForSausages(){if(state!=='over'||traded||pineapples<1)return;snacks+=pineapples*2;pineapples=0;saveLoot();traded=true;updateStats();showTrades(true);message.textContent='Yum! Each pineapple became 2 sausages!';}
     function tradePineapplesForCrystals(){if(state!=='over'||traded||pineapples<20)return;const batches=Math.floor(pineapples/20);pineapples-=batches*20;crystals+=batches*5;saveLoot();saveCrystals();traded=true;updateStats();showTrades(true);message.textContent='Sparkly! 20 pineapples became 5 crystals per batch!';}
@@ -315,7 +356,7 @@
         snacksInAir=snacksInAir.filter(s=>s.x>-60&&!s.taken);
         const catBox={x:cat.x,y:cat.y,w:cat.w,h:cat.h};
         if(obstacles.some(o=>hit(catBox,o)))end();
-        snacksInAir.forEach(s=>{if(hit(catBox,s)){s.taken=true;if(s.kind==='pineapple')pineapples++;else if(s.kind==='crystal'){crystals++;saveCrystals();}else snacks++;if(s.kind!=='crystal')saveLoot();updateStats();}});
+        snacksInAir.forEach(s=>{if(hit(catBox,s)){s.taken=true;if(s.kind==='pineapple'){pineapples++;soundPineapple();}else if(s.kind==='crystal'){crystals++;saveCrystals();soundCrystal();}else{snacks++;soundSausage();}if(s.kind!=='crystal')saveLoot();updateStats();}});
       }
       draw();requestAnimationFrame(frame);
     }
