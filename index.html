@@ -1,1 +1,77 @@
-
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#fff0f3">
+  <title>Cats & Watermelon 🍉</title>
+  <style>
+    :root{--ink:#49343d;--pink:#ff7895;--cream:#fffaf2;--green:#b7d9a7}
+    *{box-sizing:border-box}
+    body{margin:0;font-family:ui-rounded,"Trebuchet MS",system-ui,sans-serif;color:var(--ink);background:linear-gradient(180deg,#fff0f3 0%,#fffaf2 48%,#f2faed 100%);min-height:100vh}
+    .wrap{width:min(1050px,92%);margin:auto}
+    header{padding:64px 0 38px;text-align:center}
+    .eyebrow{display:inline-block;padding:8px 15px;border-radius:999px;background:#fff;border:1px solid #ffd5df;font-size:.85rem;letter-spacing:.08em;text-transform:uppercase}
+    h1{font-size:clamp(2.5rem,8vw,5.5rem);line-height:.98;margin:22px 0 14px;letter-spacing:-.06em}
+    h1 span{color:var(--pink)}
+    .intro{max-width:590px;margin:0 auto;font-size:1.1rem;line-height:1.7;color:#765d66}
+    .hero-art{font-size:clamp(3.5rem,10vw,6rem);margin:24px 0 0;filter:drop-shadow(0 8px 8px #e7a6b455)}
+    main{padding:20px 0 70px}
+    .section-head{text-align:center;margin:20px 0 28px}
+    h2{font-size:clamp(1.8rem,4vw,2.5rem);margin:0 0 8px}
+    .section-head p{margin:0;color:#806c72}
+    .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:18px}
+    .card{background:#fff;border:1px solid #f5dfe3;border-radius:25px;padding:20px;box-shadow:0 12px 30px #9c667414;transition:transform .2s ease}
+    .card:hover{transform:translateY(-5px)}
+    .art{height:170px;border-radius:19px;display:grid;place-items:center;font-size:5rem;background:linear-gradient(145deg,#ffe0e8,#fff0c9);position:relative;overflow:hidden}
+    .card:nth-child(2) .art{background:linear-gradient(145deg,#e8f3dc,#fff1d7)}
+    .card:nth-child(3) .art{background:linear-gradient(145deg,#e8e5ff,#ffe3ec)}
+    .card:nth-child(4) .art{background:linear-gradient(145deg,#dff4f0,#fff0d9)}
+    .art small{position:absolute;right:13px;bottom:10px;font-size:1.7rem}
+    h3{font-size:1.25rem;margin:17px 0 7px}
+    .card p{margin:0;color:#806c72;line-height:1.55}
+    .note{margin:34px auto 0;max-width:700px;text-align:center;padding:22px;border-radius:22px;background:#ffffffb8;border:1px dashed #e8b8c2;line-height:1.6}
+    footer{text-align:center;padding:25px 12px 38px;color:#8b747c;font-size:.9rem}
+    a{color:#bd4d70}
+    @media(prefers-reduced-motion:reduce){.card{transition:none}.card:hover{transform:none}}
+  </style>
+</head>
+<body>
+  <header class="wrap">
+    <div class="eyebrow">A tiny, happy cat gallery</div>
+    <h1>Cats <span>&</span><br>Watermelon</h1>
+    <p class="intro">A little corner of the internet for curious cats, juicy watermelon and very important snack-time adventures.</p>
+    <div class="hero-art" aria-label="Cat and watermelon">🐱 🍉</div>
+  </header>
+  <main class="wrap">
+    <div class="section-head">
+      <h2>Meet the snack squad</h2>
+      <p>Four fluffy (and not-so-fluffy) friends!</p>
+    </div>
+    <section class="grid" aria-label="Cat gallery">
+      <article class="card">
+        <div class="art" role="img" aria-label="Orange cat with watermelon">🐈<small>🍉</small></div>
+        <h3>Sunny the Curious</h3>
+        <p>Always first to investigate a mysterious pink snack.</p>
+      </article>
+      <article class="card">
+        <div class="art" role="img" aria-label="White fluffy cat and watermelon">🐈‍⬛<small>🍉</small></div>
+        <h3>Marshmallow</h3>
+        <p>Soft as a cloud and an expert at looking adorable.</p>
+      </article>
+      <article class="card">
+        <div class="art" role="img" aria-label="Sphynx cat with watermelon">🐱<small>🍉</small></div>
+        <h3>Peach the Sphynx</h3>
+        <p>No fluffy coat needed — this sweet friend brings all the charm.</p>
+      </article>
+      <article class="card">
+        <div class="art" role="img" aria-label="Playful kitten and watermelon">😺<small>🍉</small></div>
+        <h3>Little Pip</h3>
+        <p>Tiny paws, big curiosity, and a very serious snack face.</p>
+      </article>
+    </section>
+    <div class="note">🍉 <strong>Important cat note:</strong> This is a pretend snack party! Cats need cat-safe treats, not watermelon seeds or rinds.</div>
+  </main>
+  <footer>Made with a little bit of HTML, lots of imagination, and 🐾</footer>
+</body>
+</html>
