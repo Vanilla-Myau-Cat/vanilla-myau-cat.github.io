@@ -31,7 +31,19 @@
     h3{font-size:1.25rem;margin:17px 0 7px}
     .card p{margin:0;color:#806c72;line-height:1.55}
     .note{margin:34px auto 0;max-width:700px;text-align:center;padding:22px;border-radius:22px;background:#ffffffb8;border:1px dashed #e8b8c2;line-height:1.6}
-    footer{text-align:center;padding:25px 12px 38px;color:#8b747c;font-size:.9rem}
+
+    .game-section{margin:58px auto 0;max-width:900px}
+    .game-shell{background:#fff;border:1px solid #f3d9df;border-radius:28px;padding:clamp(14px,3vw,26px);box-shadow:0 14px 35px #9c667414}
+    .game-intro{text-align:center;color:#806c72;line-height:1.6;margin:0 auto 18px;max-width:600px}
+    .game-stats{display:flex;justify-content:center;gap:12px;flex-wrap:wrap;margin:14px 0}
+    .stat{background:#fff3f5;border-radius:999px;padding:8px 15px;font-weight:700}
+    #gameCanvas{display:block;width:100%;height:auto;border-radius:18px;background:linear-gradient(#eaf8ff 0%,#fff7e8 76%);border:1px solid #e8e4d9;touch-action:manipulation}
+    .game-controls{display:flex;justify-content:center;gap:12px;flex-wrap:wrap;margin-top:15px}
+    .game-btn{border:0;border-radius:999px;padding:13px 23px;font:inherit;font-weight:800;cursor:pointer;background:#ff7895;color:white;box-shadow:0 4px 0 #d95777}
+    .game-btn:active{transform:translateY(2px);box-shadow:0 2px 0 #d95777}
+    .game-btn.secondary{background:#b7d9a7;color:#354b34;box-shadow:0 4px 0 #8db57d}
+    .game-message{text-align:center;min-height:1.5em;margin:12px 0 0;color:#765d66;font-weight:600}
+\n    footer{text-align:center;padding:25px 12px 38px;color:#8b747c;font-size:.9rem}
     a{color:#bd4d70}
     @media(prefers-reduced-motion:reduce){.card{transition:none}.card:hover{transform:none}}
   </style>
@@ -70,8 +82,111 @@
         <p>Tiny paws, big curiosity, and a very serious snack face.</p>
       </article>
     </section>
+
+    <section class="game-section" aria-labelledby="game-title">
+      <div class="section-head">
+        <h2 id="game-title">🍖 Sausage Dash!</h2>
+        <p>Help the kitty collect sausages!</p>
+      </div>
+      <div class="game-shell">
+        <p class="game-intro">Jump over the watermelons and catch the sausages floating in the air. Tap the game or press the jump button!</p>
+        <div class="game-stats">
+          <div class="stat">🍖 Sausages: <span id="sausageScore">0</span></div>
+          <div class="stat">🏃 Distance: <span id="distanceScore">0</span></div>
+        </div>
+        <canvas id="gameCanvas" width="800" height="280" aria-label="A cat running, jumping over watermelons and collecting sausages"></canvas>
+        <div class="game-controls">
+          <button class="game-btn" id="startGame" type="button">▶ Start game</button>
+          <button class="game-btn secondary" id="jumpGame" type="button">⬆ Jump!</button>
+        </div>
+        <p class="game-message" id="gameMessage" aria-live="polite">Ready, kitty? Press Start game!</p>
+      </div>
+    </section>
     <div class="note">🍉 <strong>Important cat note:</strong> This is a pretend snack party! Cats need cat-safe treats, not watermelon seeds or rinds.</div>
   </main>
   <footer>Made with a little bit of HTML, lots of imagination, and 🐾</footer>
-</body>
+
+  <script>
+  (() => {
+    const canvas = document.getElementById('gameCanvas');
+    const ctx = canvas.getContext('2d');
+    const startBtn = document.getElementById('startGame');
+    const jumpBtn = document.getElementById('jumpGame');
+    const message = document.getElementById('gameMessage');
+    const sausageScore = document.getElementById('sausageScore');
+    const distanceScore = document.getElementById('distanceScore');
+    const W = canvas.width, H = canvas.height, ground = 224;
+    let state = 'ready', last = 0, elapsed = 0, obstacleTimer = 0, snackTimer = 0;
+    let distance = 0, snacks = 0, speed = 330;
+    const cat = {x:112,y:ground-48,vy:0,w:48,h:48,onGround:true};
+    let obstacles = [], snacksInAir = [];
+    function reset(){
+      elapsed=0; obstacleTimer=0; snackTimer=0; distance=0; snacks=0; speed=330;
+      cat.y=ground-cat.h; cat.vy=0; cat.onGround=true; obstacles=[]; snacksInAir=[];
+      sausageScore.textContent='0'; distanceScore.textContent='0';
+    }
+    function jump(){
+      if(state==='ready'){start();return;}
+      if(state!=='playing')return;
+      if(cat.onGround){cat.vy=-690;cat.onGround=false;}
+    }
+    function start(){reset();state='playing';last=performance.now();message.textContent='Go, kitty, go! 🐾';startBtn.textContent='↻ Restart';}
+    function end(){state='over';message.textContent='Oops! A watermelon got in the way. Try again!';startBtn.textContent='↻ Play again';}
+    function hit(a,b){return a.x+9 < b.x+b.w-7 && a.x+a.w-9 > b.x+7 && a.y+8 < b.y+b.h-5 && a.y+a.h-5 > b.y+5;}
+    function roundedRect(x,y,w,h,r,color){ctx.fillStyle=color;ctx.beginPath();ctx.roundRect(x,y,w,h,r);ctx.fill();}
+    function draw(){
+      ctx.clearRect(0,0,W,H);
+      // soft clouds
+      ctx.fillStyle='#ffffffaa';
+      [[120,54],[350,82],[650,45]].forEach(([x,y])=>{ctx.beginPath();ctx.arc(x,y,19,0,Math.PI*2);ctx.arc(x+22,y+4,15,0,Math.PI*2);ctx.fill();});
+      // distant hills and ground
+      ctx.fillStyle='#d8edc8';ctx.beginPath();ctx.moveTo(0,190);ctx.quadraticCurveTo(180,130,350,190);ctx.quadraticCurveTo(590,130,800,185);ctx.lineTo(800,280);ctx.lineTo(0,280);ctx.fill();
+      ctx.fillStyle='#8fc77e';ctx.fillRect(0,ground, W,H-ground);
+      ctx.fillStyle='#6eae62';for(let x=0;x<W;x+=38){ctx.fillRect((x-(elapsed*speed*.35)%38),ground+13,18,4);}
+      // cat
+      ctx.font='46px "Apple Color Emoji","Segoe UI Emoji",sans-serif';ctx.textAlign='center';ctx.textBaseline='middle';
+      ctx.fillText(state==='playing' && cat.onGround && Math.floor(elapsed*9)%2===0?'🐈':'🐈',cat.x+cat.w/2,cat.y+cat.h/2+1);
+      // watermelon obstacles
+      obstacles.forEach(o=>{
+        ctx.font='42px "Apple Color Emoji","Segoe UI Emoji",sans-serif';ctx.fillText('🍉',o.x+o.w/2,o.y+o.h/2);
+      });
+      // floating sausages
+      snacksInAir.forEach(s=>{
+        ctx.font='34px "Apple Color Emoji","Segoe UI Emoji",sans-serif';ctx.fillText('🌭',s.x+s.w/2,s.y+s.h/2);
+        ctx.font='14px sans-serif';ctx.fillStyle='#d98a43';ctx.fillText('✦',s.x+s.w/2+13,s.y-7);
+      });
+      if(state==='ready' || state==='over'){
+        ctx.fillStyle='#49343dcc';roundedRect(210,92,380,78,20,'#ffffffdf');
+        ctx.fillStyle='#49343d';ctx.font='bold 25px system-ui';ctx.fillText(state==='ready'?'Ready, set, MEOW!':'Game over!',400,121);
+        ctx.font='17px system-ui';ctx.fillText(state==='ready'?'Press Start to begin':'Press Play again',400,148);
+      }
+    }
+    function frame(now){
+      const dt=Math.min((now-last)/1000||0,0.035);last=now;
+      if(state==='playing'){
+        elapsed+=dt;speed=330+Math.min(elapsed*10,190);distance=Math.floor(elapsed*10);
+        distanceScore.textContent=distance;
+        cat.vy+=1650*dt;cat.y+=cat.vy*dt;
+        if(cat.y>=ground-cat.h){cat.y=ground-cat.h;cat.vy=0;cat.onGround=true;}
+        obstacleTimer+=dt;snackTimer+=dt;
+        if(obstacleTimer>Math.max(.9,1.45-elapsed*.008)){obstacleTimer=0;obstacles.push({x:W+20,y:ground-43,w:45,h:43});}
+        if(snackTimer>1.15){snackTimer=0;snacksInAir.push({x:W+20,y:ground-105-Math.random()*62,w:40,h:35,taken:false});}
+        obstacles.forEach(o=>o.x-=speed*dt);
+        snacksInAir.forEach(s=>s.x-=speed*dt);
+        obstacles=obstacles.filter(o=>o.x>-60);
+        snacksInAir=snacksInAir.filter(s=>s.x>-60&&!s.taken);
+        const catBox={x:cat.x,y:cat.y,w:cat.w,h:cat.h};
+        if(obstacles.some(o=>hit(catBox,o)))end();
+        snacksInAir.forEach(s=>{if(hit(catBox,s)){s.taken=true;snacks++;sausageScore.textContent=snacks;}});
+      }
+      draw();requestAnimationFrame(frame);
+    }
+    startBtn.addEventListener('click',start);
+    jumpBtn.addEventListener('click',jump);
+    canvas.addEventListener('pointerdown',jump);
+    window.addEventListener('keydown',e=>{if(e.code==='Space'||e.code==='ArrowUp'){e.preventDefault();jump();}});
+    draw();requestAnimationFrame(t=>{last=t;requestAnimationFrame(frame);});
+  })();
+  </script>
+\n</body>
 </html>
