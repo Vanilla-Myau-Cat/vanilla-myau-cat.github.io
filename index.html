@@ -320,6 +320,7 @@
         ctx.beginPath();ctx.moveTo(8,10);ctx.lineTo(10-swing,18);ctx.lineTo(13-swing,22);ctx.stroke();
         ctx.beginPath();ctx.moveTo(15,8);ctx.lineTo(17+swing,17);ctx.lineTo(20+swing,21);ctx.stroke();
       }
+      if(equippedOutfit){const accessory=clothingCatalog.find(item=>item.name===equippedOutfit);if(accessory){ctx.font='25px "Apple Color Emoji","Segoe UI Emoji",sans-serif';ctx.fillText(accessory.emoji,7,-31);}}
       ctx.restore();
     }
     function draw(){
@@ -388,7 +389,7 @@
     pineappleSausagesBtn.addEventListener('click',tradePineapplesForSausages);
     pineappleCrystalsBtn.addEventListener('click',tradePineapplesForCrystals);
     sausageCrystalsBtn.addEventListener('click',tradeSausagesForCrystal);
-    updateStats();showTrades(false);updateTimeButton();refreshShop();setInterval(updateShopClock,30000);
+    updateStats();showTrades(false);updateTimeButton();refreshShop();updateShopClock();setInterval(updateShopClock,30000);
     checkPublishedVersion();
     jumpBtn.addEventListener('click',jump);
     stopTimeBtn.addEventListener('click',stopTime);
