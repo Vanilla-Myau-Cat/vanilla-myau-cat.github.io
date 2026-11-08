@@ -47,7 +47,7 @@
     .time-choice[hidden]{display:none}
     .time-choice{padding-top:10px;border-top:1px dashed #eadce5}
     .game-message{text-align:center;min-height:1.5em;margin:12px 0 0;color:#765d66;font-weight:600}
-    .shop{margin-top:22px;padding:18px;border-radius:22px;background:#fff8e9;border:1px solid #f1dfb8}
+    .shop[hidden]{display:none}.shop{margin-top:22px;padding:18px;border-radius:22px;background:#fff8e9;border:1px solid #f1dfb8}
     .shop h3{margin:0 0 8px;text-align:center}.shop-info{text-align:center;color:#806c72;margin:0 0 14px}
     .shop-items{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px}
     .shop-item{background:#fff;border:1px solid #eadfc9;border-radius:16px;padding:12px;text-align:center}
@@ -115,11 +115,12 @@
         </div>
         <div class="game-stats"><div class="stat cookie-stat">🍪 Cookies: <span id="cookieScore">0</span></div><div class="stat">👗 Outfit: <span id="equippedOutfit">None</span></div></div>
         <canvas id="gameCanvas" width="800" height="280" aria-label="A cat running, jumping over watermelons and collecting snacks"></canvas>
-        <section class="shop" aria-label="Clothing shop"><h3>🛍️ Kitty Clothing Shop</h3><p class="shop-info">🔄 Refreshes every 10 hours! Ordinary clothes: 1 cookie · Legendary: 10 cookies</p><div class="shop-items" id="shopItems"></div><p class="shop-info" id="shopTimer">Shop timer</p></section>
+        <section class="shop" id="clothingShop" aria-label="Clothing shop" hidden><h3>🛍️ Kitty Clothing Shop</h3><p class="shop-info">🔄 Refreshes every 10 hours! Ordinary clothes: 1 cookie · Legendary: 10 cookies</p><div class="shop-items" id="shopItems"></div><p class="shop-info" id="shopTimer">Shop timer</p></section>
         <div class="game-controls">
           <button class="game-btn" id="startGame" type="button">▶ Start game</button>
           <button class="game-btn secondary" id="jumpGame" type="button">⬆ Jump!</button>
           <button class="game-btn time" id="stopTimeGame" type="button">⏳ Stop time (10 💎)</button>
+          <button class="game-btn secondary" id="openShop" type="button">🛍️ Open shop</button>
         </div>
         <div class="game-controls time-choice" id="timeChoiceControls" hidden>
           <button class="game-btn secondary" id="timeForward" type="button">➡ Forward</button>
@@ -155,6 +156,8 @@
     const distanceScore = document.getElementById('distanceScore');
     const pineappleScore = document.getElementById('pineappleScore');
     const crystalScore = document.getElementById('crystalScore');
+    const openShopBtn=document.getElementById('openShop'),clothingShop=document.getElementById('clothingShop');
+    openShopBtn.addEventListener('click',()=>{clothingShop.hidden=!clothingShop.hidden;openShopBtn.textContent=clothingShop.hidden?'🛍️ Open shop':'✖ Close shop';if(!clothingShop.hidden)clothingShop.scrollIntoView({behavior:'smooth',block:'start'});});
     const cookieScore=document.getElementById('cookieScore'),shopItemsEl=document.getElementById('shopItems'),shopTimerEl=document.getElementById('shopTimer'),equippedOutfitEl=document.getElementById('equippedOutfit');
     const afterControls = document.getElementById('afterGameControls');
     const reviveBtn = document.getElementById('reviveGame');
