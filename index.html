@@ -54,6 +54,7 @@
     .shop-item .clothes-art{font-size:2.5rem}.shop-item strong{display:block;margin:5px 0}
     .shop-item button{border:0;border-radius:999px;padding:8px 12px;background:#ff7895;color:white;font-weight:800;cursor:pointer}
     .shop-item button:disabled{opacity:.45;cursor:not-allowed}
+.crate-panel{margin-top:14px;padding:14px;border-radius:18px;background:#fff;border:1px dashed #d8b9e8;text-align:center}.dragon-btn{background:#8b54c8;box-shadow:0 4px 0 #63379a}.dragon-btn:disabled{opacity:.5}
     .shop-item.legendary{border:2px solid #b79af5;background:#fbf7ff}
     .cookie-stat{background:#fff0c9}
     .site-version{width:fit-content;max-width:92%;margin:0 auto 22px;padding:10px 16px;border-radius:999px;background:#fff;border:1px solid #f1d6dd;color:#765d66;text-align:center;font-size:.92rem;font-weight:700}
@@ -116,11 +117,12 @@
         <div class="game-stats"><div class="stat cookie-stat">🍪 Cookies: <span id="cookieScore">0</span></div><div class="stat">👗 Outfit: <span id="equippedOutfit">None</span></div></div>
         <canvas id="gameCanvas" width="800" height="280" aria-label="A cat running, jumping over watermelons and collecting snacks"></canvas>
         <section class="shop" id="clothingShop" aria-label="Clothing shop" hidden><h3>🛍️ Kitty Clothing Shop</h3><p class="shop-info">🔄 Refreshes every 10 hours! Ordinary clothes: 1 cookie · Legendary: 10 cookies</p><div class="shop-items" id="shopItems"></div><p class="shop-info" id="shopTimer">Shop timer</p></section>
+        <div class="crate-panel"><strong>🎁 Mystery crate — 3 🍪</strong><p class="shop-info">Пока внутри только скин дракона 🐉</p><button class="game-btn" id="openCrate" type="button">🎁 Open crate (3 🍪)</button><p id="crateMessage" class="shop-info"></p></div>
         <div class="game-controls">
           <button class="game-btn" id="startGame" type="button">▶ Start game</button>
           <button class="game-btn secondary" id="jumpGame" type="button">⬆ Jump!</button>
           <button class="game-btn time" id="stopTimeGame" type="button">⏳ Stop time (10 💎)</button>
-          <button class="game-btn secondary" id="openShop" type="button">🛍️ Open shop</button>
+          <button class="game-btn secondary" id="openShop" type="button">🛍️ Open shop</button><button class="game-btn dragon-btn" id="dragonPower" type="button" hidden>🐉 Dragon power</button>
         </div>
         <div class="game-controls time-choice" id="timeChoiceControls" hidden>
           <button class="game-btn secondary" id="timeForward" type="button">➡ Forward</button>
@@ -156,7 +158,7 @@
     const distanceScore = document.getElementById('distanceScore');
     const pineappleScore = document.getElementById('pineappleScore');
     const crystalScore = document.getElementById('crystalScore');
-    const openShopBtn=document.getElementById('openShop'),clothingShop=document.getElementById('clothingShop');
+    const openShopBtn=document.getElementById('openShop'),clothingShop=document.getElementById('clothingShop');const openCrateBtn=document.getElementById('openCrate'),crateMessage=document.getElementById('crateMessage'),dragonPowerBtn=document.getElementById('dragonPower');
     openShopBtn.addEventListener('click',()=>{clothingShop.hidden=!clothingShop.hidden;openShopBtn.textContent=clothingShop.hidden?'🛍️ Open shop':'✖ Close shop';if(!clothingShop.hidden)clothingShop.scrollIntoView({behavior:'smooth',block:'start'});});
     const cookieScore=document.getElementById('cookieScore'),shopItemsEl=document.getElementById('shopItems'),shopTimerEl=document.getElementById('shopTimer'),equippedOutfitEl=document.getElementById('equippedOutfit');
     const afterControls = document.getElementById('afterGameControls');
@@ -194,7 +196,7 @@
     let state = 'ready', last = 0, elapsed = 0, obstacleTimer = 0, snackTimer = 0;
     let distance = 0, snacks = loadLoot('catDashSausages'), pineapples = loadLoot('catDashPineapples'), crystals = loadCrystals(), cookies=loadLoot('catDashCookies'),speed=330,traded=false;
     const clothingCatalog=[{name:'Pink Bow',emoji:'🎀',tier:'ordinary'},{name:'Tiny Crown',emoji:'👑',tier:'ordinary'},{name:'Blue Scarf',emoji:'🧣',tier:'ordinary'},{name:'Flower Hat',emoji:'🌸',tier:'ordinary'},{name:'Galaxy Wings',emoji:'🪽',tier:'legendary'},{name:'Rainbow Crown',emoji:'🌈',tier:'legendary'},{name:'Star Cape',emoji:'✨',tier:'legendary'},{name:'Magic Halo',emoji:'😇',tier:'legendary'}];
-    let shopStock=[],shopRefreshAt=0,ownedClothes=loadOwnedClothes(),equippedOutfit=loadEquipped();const SHOP_INTERVAL=10*60*60*1000;
+    let shopStock=[],shopRefreshAt=0,ownedClothes=loadOwnedClothes(),equippedOutfit=loadEquipped();const SHOP_INTERVAL=10*60*60*1000;let dragonCooldownUntil=0;
     function loadOwnedClothes(){try{return JSON.parse(localStorage.getItem('catDashClothes')||'[]');}catch(e){return [];}}
     function loadEquipped(){try{return localStorage.getItem('catDashEquipped')||'';}catch(e){return '';}}
     function saveClothes(){try{localStorage.setItem('catDashClothes',JSON.stringify(ownedClothes));localStorage.setItem('catDashEquipped',equippedOutfit);}catch(e){}}
@@ -268,6 +270,10 @@
     function loadCrystals(){try{return Math.max(0,Number(localStorage.getItem('catDashCrystals'))||0);}catch(e){return 0;}}
     function saveCrystals(){try{localStorage.setItem('catDashCrystals',String(crystals));}catch(e){} crystalScore.textContent=crystals;updateTimeButton();}
     function updateStats(){sausageScore.textContent=snacks;pineappleScore.textContent=pineapples;crystalScore.textContent=crystals;cookieScore.textContent=cookies;}
+    function hasDragon(){return ownedClothes.includes('Dragon Skin');}
+    function updateDragonButton(){dragonPowerBtn.hidden=!hasDragon();const left=Math.max(0,dragonCooldownUntil-Date.now());dragonPowerBtn.disabled=left>0;dragonPowerBtn.textContent=left>0?'🐉 Recharge '+Math.ceil(left/1000)+'s':'🐉 Dragon power (30 🍉)';}
+    openCrateBtn.addEventListener('click',()=>{if(cookies<3){crateMessage.textContent='Нужно 3 печеньки 🍪';return;}if(hasDragon()){crateMessage.textContent='Дракон уже у тебя!';return;}cookies-=3;saveCookies();ownedClothes.push('Dragon Skin');equippedOutfit='Dragon Skin';saveClothes();crateMessage.textContent='🎉 Выпал Dragon Skin! Сила дракона разблокирована! 🐉';updateStats();renderShop();updateDragonButton();});
+    dragonPowerBtn.addEventListener('click',()=>{if(!hasDragon()||Date.now()<dragonCooldownUntil)return;let n=0;for(let i=obstacles.length-1;i>=0&&n<30;i--){if(obstacles[i].x>cat.x+cat.w){obstacles.splice(i,1);n++;}}dragonCooldownUntil=Date.now()+5000;message.textContent='🐉 Дракон уничтожил '+n+' арбузов!';updateDragonButton();});setInterval(updateDragonButton,250);
     function showTrades(show){afterControls.hidden=!show;reviveBtn.disabled=crystals<5;pineappleSausagesBtn.disabled=pineapples<1||traded;pineappleCrystalsBtn.disabled=pineapples<20||traded;sausageCrystalsBtn.disabled=snacks<20||traded;}
     function reset(){
       elapsed=0; obstacleTimer=0; snackTimer=0; distance=0; speed=330;traded=false;
@@ -338,7 +344,7 @@
         ctx.beginPath();ctx.moveTo(8,10);ctx.lineTo(10-swing,18);ctx.lineTo(13-swing,22);ctx.stroke();
         ctx.beginPath();ctx.moveTo(15,8);ctx.lineTo(17+swing,17);ctx.lineTo(20+swing,21);ctx.stroke();
       }
-      if(equippedOutfit){const accessory=clothingCatalog.find(item=>item.name===equippedOutfit);if(accessory){ctx.font='25px "Apple Color Emoji","Segoe UI Emoji",sans-serif';ctx.fillText(accessory.emoji,7,-31);}}
+      if(equippedOutfit){const accessory=clothingCatalog.find(item=>item.name===equippedOutfit);if(accessory){ctx.font='25px "Apple Color Emoji","Segoe UI Emoji",sans-serif';ctx.fillText(accessory.emoji,7,-31);}}if(equippedOutfit==='Dragon Skin'){ctx.font='27px "Apple Color Emoji","Segoe UI Emoji",sans-serif';ctx.fillText('🐉',-5,-32);}
       ctx.restore();
     }
     function draw(){
@@ -407,7 +413,7 @@
     pineappleSausagesBtn.addEventListener('click',tradePineapplesForSausages);
     pineappleCrystalsBtn.addEventListener('click',tradePineapplesForCrystals);
     sausageCrystalsBtn.addEventListener('click',tradeSausagesForCrystal);
-    updateStats();showTrades(false);updateTimeButton();refreshShop();updateShopClock();setInterval(updateShopClock,30000);
+    updateStats();showTrades(false);updateTimeButton();refreshShop();updateDragonButton();updateShopClock();setInterval(updateShopClock,30000);
     checkPublishedVersion();
     jumpBtn.addEventListener('click',jump);
     stopTimeBtn.addEventListener('click',stopTime);
