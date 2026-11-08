@@ -47,6 +47,15 @@
     .time-choice[hidden]{display:none}
     .time-choice{padding-top:10px;border-top:1px dashed #eadce5}
     .game-message{text-align:center;min-height:1.5em;margin:12px 0 0;color:#765d66;font-weight:600}
+    .shop{margin-top:22px;padding:18px;border-radius:22px;background:#fff8e9;border:1px solid #f1dfb8}
+    .shop h3{margin:0 0 8px;text-align:center}.shop-info{text-align:center;color:#806c72;margin:0 0 14px}
+    .shop-items{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px}
+    .shop-item{background:#fff;border:1px solid #eadfc9;border-radius:16px;padding:12px;text-align:center}
+    .shop-item .clothes-art{font-size:2.5rem}.shop-item strong{display:block;margin:5px 0}
+    .shop-item button{border:0;border-radius:999px;padding:8px 12px;background:#ff7895;color:white;font-weight:800;cursor:pointer}
+    .shop-item button:disabled{opacity:.45;cursor:not-allowed}
+    .shop-item.legendary{border:2px solid #b79af5;background:#fbf7ff}
+    .cookie-stat{background:#fff0c9}
     .site-version{width:fit-content;max-width:92%;margin:0 auto 22px;padding:10px 16px;border-radius:999px;background:#fff;border:1px solid #f1d6dd;color:#765d66;text-align:center;font-size:.92rem;font-weight:700}
     .site-version.pending{background:#fff5d9;border-color:#f0d48b;color:#795c19}
     .site-version.current{background:#eff9eb;border-color:#cce5c2;color:#42663b}
@@ -104,7 +113,9 @@
           <div class="stat">💎 Crystals: <span id="crystalScore">0</span></div>
           <div class="stat">🏃 Distance: <span id="distanceScore">0</span></div>
         </div>
-        <canvas id="gameCanvas" width="800" height="280" aria-label="A cat running, jumping over watermelons and collecting sausages"></canvas>
+        <div class="game-stats"><div class="stat cookie-stat">🍪 Cookies: <span id="cookieScore">0</span></div><div class="stat">👗 Outfit: <span id="equippedOutfit">None</span></div></div>
+        <canvas id="gameCanvas" width="800" height="280" aria-label="A cat running, jumping over watermelons and collecting snacks"></canvas>
+        <section class="shop" aria-label="Clothing shop"><h3>🛍️ Kitty Clothing Shop</h3><p class="shop-info">🔄 Refreshes every 10 hours! Ordinary clothes: 1 cookie · Legendary: 10 cookies</p><div class="shop-items" id="shopItems"></div><p class="shop-info" id="shopTimer">Shop timer</p></section>
         <div class="game-controls">
           <button class="game-btn" id="startGame" type="button">▶ Start game</button>
           <button class="game-btn secondary" id="jumpGame" type="button">⬆ Jump!</button>
@@ -144,6 +155,7 @@
     const distanceScore = document.getElementById('distanceScore');
     const pineappleScore = document.getElementById('pineappleScore');
     const crystalScore = document.getElementById('crystalScore');
+    const cookieScore=document.getElementById('cookieScore'),shopItemsEl=document.getElementById('shopItems'),shopTimerEl=document.getElementById('shopTimer'),equippedOutfitEl=document.getElementById('equippedOutfit');
     const afterControls = document.getElementById('afterGameControls');
     const reviveBtn = document.getElementById('reviveGame');
     const pineappleSausagesBtn = document.getElementById('pineappleSausages');
@@ -177,7 +189,18 @@
       }
     }
     let state = 'ready', last = 0, elapsed = 0, obstacleTimer = 0, snackTimer = 0;
-    let distance = 0, snacks = loadLoot('catDashSausages'), pineapples = loadLoot('catDashPineapples'), crystals = loadCrystals(), speed = 330, traded = false;
+    let distance = 0, snacks = loadLoot('catDashSausages'), pineapples = loadLoot('catDashPineapples'), crystals = loadCrystals(), cookies=loadLoot('catDashCookies'),speed=330,traded=false;
+    const clothingCatalog=[{name:'Pink Bow',emoji:'🎀',tier:'ordinary'},{name:'Tiny Crown',emoji:'👑',tier:'ordinary'},{name:'Blue Scarf',emoji:'🧣',tier:'ordinary'},{name:'Flower Hat',emoji:'🌸',tier:'ordinary'},{name:'Galaxy Wings',emoji:'🪽',tier:'legendary'},{name:'Rainbow Crown',emoji:'🌈',tier:'legendary'},{name:'Star Cape',emoji:'✨',tier:'legendary'},{name:'Magic Halo',emoji:'😇',tier:'legendary'}];
+    let shopStock=[],shopRefreshAt=0,ownedClothes=loadOwnedClothes(),equippedOutfit=loadEquipped();const SHOP_INTERVAL=10*60*60*1000;
+    function loadOwnedClothes(){try{return JSON.parse(localStorage.getItem('catDashClothes')||'[]');}catch(e){return [];}}
+    function loadEquipped(){try{return localStorage.getItem('catDashEquipped')||'';}catch(e){return '';}}
+    function saveClothes(){try{localStorage.setItem('catDashClothes',JSON.stringify(ownedClothes));localStorage.setItem('catDashEquipped',equippedOutfit);}catch(e){}}
+    function saveCookies(){try{localStorage.setItem('catDashCookies',String(cookies));}catch(e){}}
+    function refreshShop(force=false){let savedAt=0;try{savedAt=Number(localStorage.getItem('catDashShopRefresh'))||0;}catch(e{}}
+      const now=Date.now();if(force||!savedAt||now-savedAt>=SHOP_INTERVAL){const a=clothingCatalog.filter(x=>x.tier==='ordinary'),b=clothingCatalog.filter(x=>x.tier==='legendary');shopStock=[a[Math.floor(Math.random()*a.length)],a[Math.floor(Math.random()*a.length)],b[Math.floor(Math.random()*b.length)]];if(shopStock[0].name===shopStock[1].name)shopStock[1]=a[(a.indexOf(shopStock[0])+1)%a.length];shopRefreshAt=now+SHOP_INTERVAL;try{localStorage.setItem('catDashShopStock',JSON.stringify(shopStock));localStorage.setItem('catDashShopRefresh',String(now));}catch(e){}}
+      else{shopRefreshAt=savedAt+SHOP_INTERVAL;try{shopStock=JSON.parse(localStorage.getItem('catDashShopStock')||'[]');}catch(e){shopStock=[];}if(!shopStock.length){refreshShop(true);return;}}renderShop();}
+    function renderShop(){shopItemsEl.innerHTML='';shopStock.forEach(item=>{const owned=ownedClothes.includes(item.name),price=item.tier==='legendary'?10:1;const card=document.createElement('div');card.className='shop-item'+(item.tier==='legendary'?' legendary':'');const art=document.createElement('div');art.className='clothes-art';art.textContent=item.emoji;const title=document.createElement('strong');title.textContent=item.name+(item.tier==='legendary'?' ✨':'');const cost=document.createElement('div');cost.textContent='🍪 '+price;const btn=document.createElement('button');btn.textContent=owned?(equippedOutfit===item.name?'Wearing ✓':'Wear'):'Buy';btn.disabled=!owned&&cookies<price;btn.onclick=()=>{if(owned){equippedOutfit=item.name;saveClothes();renderShop();return;}if(cookies<price)return;cookies-=price;ownedClothes.push(item.name);equippedOutfit=item.name;saveClothes();saveCookies();updateStats();renderShop();message.textContent='Ура! Новая одежда для котика! '+item.emoji;};card.append(art,title,cost,btn);shopItemsEl.append(card);});equippedOutfitEl.textContent=equippedOutfit||'None';}
+    function updateShopClock(){const left=Math.max(0,shopRefreshAt-Date.now());shopTimerEl.textContent='⏰ New clothes in '+Math.floor(left/3600000)+'h '+Math.floor(left%3600000/60000)+'m';if(left===0)refreshShop(true);}
     let timeStopRemaining = 0, pendingTimeAction = null, direction = 1, backwardJumps = 0;
     const cat = {x:112,y:ground-48,vy:0,w:48,h:48,onGround:true};
     let obstacles = [], snacksInAir = [];
@@ -226,7 +249,7 @@
     }
     function loadCrystals(){try{return Math.max(0,Number(localStorage.getItem('catDashCrystals'))||0);}catch(e){return 0;}}
     function saveCrystals(){try{localStorage.setItem('catDashCrystals',String(crystals));}catch(e){} crystalScore.textContent=crystals;updateTimeButton();}
-    function updateStats(){sausageScore.textContent=snacks;pineappleScore.textContent=pineapples;crystalScore.textContent=crystals;}
+    function updateStats(){sausageScore.textContent=snacks;pineappleScore.textContent=pineapples;crystalScore.textContent=crystals;cookieScore.textContent=cookies;}
     function showTrades(show){afterControls.hidden=!show;reviveBtn.disabled=crystals<5;pineappleSausagesBtn.disabled=pineapples<1||traded;pineappleCrystalsBtn.disabled=pineapples<20||traded;sausageCrystalsBtn.disabled=snacks<20||traded;}
     function reset(){
       elapsed=0; obstacleTimer=0; snackTimer=0; distance=0; speed=330;traded=false;
@@ -317,7 +340,7 @@
       });
       // floating sausages
       snacksInAir.forEach(s=>{
-        ctx.font='34px "Apple Color Emoji","Segoe UI Emoji",sans-serif';ctx.fillText(s.kind==='pineapple'?'🍍':s.kind==='crystal'?'💎':'🌭',s.x+s.w/2,s.y+s.h/2);
+        ctx.font='34px "Apple Color Emoji","Segoe UI Emoji",sans-serif';ctx.fillText(s.kind==='pineapple'?'🍍':s.kind==='crystal'?'💎':s.kind==='cookie'?'🍪':'🌭',s.x+s.w/2,s.y+s.h/2);
         ctx.font='14px sans-serif';ctx.fillStyle='#d98a43';ctx.fillText('✦',s.x+s.w/2+13,s.y-7);
       });
       if(state==='timeStopped'){
@@ -349,14 +372,14 @@
         if(cat.y>=ground-cat.h){cat.y=ground-cat.h;cat.vy=0;cat.onGround=true;if(direction===-1&&backwardJumps>=5){direction=1;backwardJumps=0;message.textContent='Пятый прыжок завершён — кот снова бежит вперёд! ➡';}}
         obstacleTimer+=dt;snackTimer+=dt;
         if(obstacleTimer>Math.max(.9,1.45-elapsed*.008)){obstacleTimer=0;obstacles.push({x:W+20,y:ground-43,w:45,h:43});}
-        if(snackTimer>1.05){snackTimer=0;const roll=Math.random();const kind=roll<0.15?'crystal':roll<0.38?'pineapple':'sausage';snacksInAir.push({x:W+20,y:ground-105-Math.random()*62,w:40,h:35,taken:false,kind});}
+        if(snackTimer>1.05){snackTimer=0;const roll=Math.random();const kind=roll<0.12?'crystal':roll<0.30?'pineapple':roll<0.48?'cookie':'sausage';snacksInAir.push({x:W+20,y:ground-105-Math.random()*62,w:40,h:35,taken:false,kind});}
         obstacles.forEach(o=>o.x-=speed*dt);
         snacksInAir.forEach(s=>s.x-=speed*dt);
         obstacles=obstacles.filter(o=>o.x>-60);
         snacksInAir=snacksInAir.filter(s=>s.x>-60&&!s.taken);
         const catBox={x:cat.x,y:cat.y,w:cat.w,h:cat.h};
         if(obstacles.some(o=>hit(catBox,o)))end();
-        snacksInAir.forEach(s=>{if(hit(catBox,s)){s.taken=true;if(s.kind==='pineapple'){pineapples++;soundPineapple();}else if(s.kind==='crystal'){crystals++;saveCrystals();soundCrystal();}else{snacks++;soundSausage();}if(s.kind!=='crystal')saveLoot();updateStats();}});
+        snacksInAir.forEach(s=>{if(hit(catBox,s)){s.taken=true;if(s.kind==='pineapple'){pineapples++;soundPineapple();saveLoot();}else if(s.kind==='crystal'){crystals++;saveCrystals();soundCrystal();}else if(s.kind==='cookie'){cookies++;saveCookies();unlockAudio();sayCat('Ням!',1,1.3);}else{snacks++;soundSausage();saveLoot();}updateStats();}});
       }
       draw();requestAnimationFrame(frame);
     }
@@ -365,7 +388,7 @@
     pineappleSausagesBtn.addEventListener('click',tradePineapplesForSausages);
     pineappleCrystalsBtn.addEventListener('click',tradePineapplesForCrystals);
     sausageCrystalsBtn.addEventListener('click',tradeSausagesForCrystal);
-    updateStats();showTrades(false);updateTimeButton();
+    updateStats();showTrades(false);updateTimeButton();refreshShop();setInterval(updateShopClock,30000);
     checkPublishedVersion();
     jumpBtn.addEventListener('click',jump);
     stopTimeBtn.addEventListener('click',stopTime);
