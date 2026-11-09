@@ -315,37 +315,48 @@
     function hit(a,b){return a.x+9 < b.x+b.w-7 && a.x+a.w-9 > b.x+7 && a.y+8 < b.y+b.h-5 && a.y+a.h-5 > b.y+5;}
     function roundedRect(x,y,w,h,r,color){ctx.fillStyle=color;ctx.beginPath();ctx.roundRect(x,y,w,h,r);ctx.fill();}
     function drawCat(cx,cy,time,jumping){
-      ctx.save();
-      ctx.translate(cx,cy);
-      // The face is drawn toward the right, so the kitty runs forward.
-      const run=Math.sin(time*17);
-      // Curled tail swishes as the kitty runs
-      ctx.strokeStyle='#17151d';ctx.lineWidth=5;ctx.lineCap='round';
-      ctx.beginPath();ctx.moveTo(-17,5);ctx.quadraticCurveTo(-29,-2+run*3,-25,-15+run*2);ctx.stroke();
-      // Body
-      ctx.fillStyle='#17151d';
-      ctx.beginPath();ctx.ellipse(-1,3,19,12,-.12,0,Math.PI*2);ctx.fill();
-      // Head and pointy ears
-      ctx.beginPath();ctx.arc(14,-8,12,0,Math.PI*2);ctx.fill();
-      ctx.beginPath();ctx.moveTo(6,-16);ctx.lineTo(7,-29);ctx.lineTo(15,-18);ctx.closePath();ctx.fill();
-      ctx.beginPath();ctx.moveTo(16,-18);ctx.lineTo(25,-28);ctx.lineTo(25,-12);ctx.closePath();ctx.fill();
-      // Tiny golden eye and nose
-      ctx.fillStyle='#f8df83';ctx.beginPath();ctx.arc(18,-9,1.8,0,Math.PI*2);ctx.fill();
-      ctx.fillStyle='#f4a0b2';ctx.beginPath();ctx.arc(25,-5,1.5,0,Math.PI*2);ctx.fill();
-      // Four little legs: two back legs and two front legs.
-      ctx.strokeStyle='#17151d';ctx.lineWidth=4.5;ctx.lineCap='round';ctx.lineJoin='round';
-      if(jumping){
-        [[-12,-21,19,-27,17],[-4,-13,21,-18,20],[8,12,20,18,17],[15,17,22,24,17]].forEach(([x1,x2,y1,x3,y2])=>{
-          ctx.beginPath();ctx.moveTo(x1,10);ctx.lineTo(x2,y1);ctx.lineTo(x3,y2);ctx.stroke();
-        });
+      ctx.save();ctx.translate(cx,cy);
+      const run=Math.sin(time*17),swing=run*6;
+      if(equippedOutfit==='Piggy'){
+        // Pig transformation: pink round body, pig face, ears and curly tail
+        ctx.fillStyle='#f49bb5';ctx.beginPath();ctx.ellipse(-2,3,22,15,0,0,Math.PI*2);ctx.fill();
+        ctx.beginPath();ctx.arc(14,-8,15,0,Math.PI*2);ctx.fill();
+        ctx.beginPath();ctx.moveTo(3,-17);ctx.lineTo(1,-30);ctx.lineTo(13,-21);ctx.closePath();ctx.fill();
+        ctx.beginPath();ctx.moveTo(17,-21);ctx.lineTo(29,-30);ctx.lineTo(27,-15);ctx.closePath();ctx.fill();
+        ctx.fillStyle='#ffb9ce';ctx.beginPath();ctx.ellipse(23,-5,8,5,0,0,Math.PI*2);ctx.fill();
+        ctx.fillStyle='#a84e72';ctx.beginPath();ctx.arc(21,-5,1.5,0,Math.PI*2);ctx.arc(26,-5,1.5,0,Math.PI*2);ctx.fill();
+        ctx.fillStyle='#3e2430';ctx.beginPath();ctx.arc(15,-12,1.8,0,Math.PI*2);ctx.fill();
+        ctx.strokeStyle='#f49bb5';ctx.lineWidth=4;ctx.beginPath();ctx.moveTo(-20,4);ctx.quadraticCurveTo(-31,-5,-25,-12);ctx.stroke();
+        ctx.strokeStyle='#f49bb5';ctx.lineWidth=4.5;ctx.lineCap='round';
+        const legs=[[-13,9,-15+swing,19],[-4,11,-5-swing,20],[8,10,10-swing,20],[15,8,17+swing,19]];
+        legs.forEach(([x,y,x2,y2])=>{ctx.beginPath();ctx.moveTo(x,y);ctx.lineTo(x2,y2);ctx.stroke();});
+      }else if(equippedOutfit==='Dragon Skin'){
+        // Dragon transformation: green dragon body, wings, horns and tail
+        ctx.fillStyle='#57ad72';ctx.beginPath();ctx.ellipse(-2,3,22,14,0,0,Math.PI*2);ctx.fill();
+        ctx.fillStyle='#3b8d5b';ctx.beginPath();ctx.moveTo(-8,-5);ctx.lineTo(-24,-25);ctx.lineTo(2,-17);ctx.closePath();ctx.fill();
+        ctx.beginPath();ctx.moveTo(4,-6);ctx.lineTo(18,-27);ctx.lineTo(24,-8);ctx.closePath();ctx.fill();
+        ctx.fillStyle='#57ad72';ctx.beginPath();ctx.arc(14,-8,13,0,Math.PI*2);ctx.fill();
+        ctx.beginPath();ctx.moveTo(6,-17);ctx.lineTo(3,-29);ctx.lineTo(13,-20);ctx.closePath();ctx.fill();
+        ctx.beginPath();ctx.moveTo(17,-18);ctx.lineTo(27,-29);ctx.lineTo(25,-12);ctx.closePath();ctx.fill();
+        ctx.fillStyle='#f8df83';ctx.beginPath();ctx.arc(19,-9,2,0,Math.PI*2);ctx.fill();
+        ctx.fillStyle='#f4a0b2';ctx.beginPath();ctx.arc(26,-5,1.5,0,Math.PI*2);ctx.fill();
+        ctx.strokeStyle='#3b8d5b';ctx.lineWidth=5;ctx.beginPath();ctx.moveTo(-18,4);ctx.lineTo(-29,-7);ctx.lineTo(-24,-16);ctx.stroke();
+        ctx.strokeStyle='#57ad72';ctx.lineWidth=4.5;ctx.lineCap='round';
+        [[-13,9,-15+swing,19],[-4,11,-5-swing,20],[8,10,10-swing,20],[15,8,17+swing,19]].forEach(([x,y,x2,y2])=>{ctx.beginPath();ctx.moveTo(x,y);ctx.lineTo(x2,y2);ctx.stroke();});
       }else{
-        const swing=run*6;
-        ctx.beginPath();ctx.moveTo(-13,9);ctx.lineTo(-15+swing,17);ctx.lineTo(-18+swing,21);ctx.stroke();
-        ctx.beginPath();ctx.moveTo(-4,11);ctx.lineTo(-5-swing,18);ctx.lineTo(-8-swing,22);ctx.stroke();
-        ctx.beginPath();ctx.moveTo(8,10);ctx.lineTo(10-swing,18);ctx.lineTo(13-swing,22);ctx.stroke();
-        ctx.beginPath();ctx.moveTo(15,8);ctx.lineTo(17+swing,17);ctx.lineTo(20+swing,21);ctx.stroke();
+        ctx.strokeStyle='#17151d';ctx.lineWidth=5;ctx.lineCap='round';
+        ctx.beginPath();ctx.moveTo(-17,5);ctx.quadraticCurveTo(-29,-2+run*3,-25,-15+run*2);ctx.stroke();
+        ctx.fillStyle='#17151d';ctx.beginPath();ctx.ellipse(-1,3,19,12,-.12,0,Math.PI*2);ctx.fill();
+        ctx.beginPath();ctx.arc(14,-8,12,0,Math.PI*2);ctx.fill();
+        ctx.beginPath();ctx.moveTo(6,-16);ctx.lineTo(7,-29);ctx.lineTo(15,-18);ctx.closePath();ctx.fill();
+        ctx.beginPath();ctx.moveTo(16,-18);ctx.lineTo(25,-28);ctx.lineTo(25,-12);ctx.closePath();ctx.fill();
+        ctx.fillStyle='#f8df83';ctx.beginPath();ctx.arc(18,-9,1.8,0,Math.PI*2);ctx.fill();
+        ctx.fillStyle='#f4a0b2';ctx.beginPath();ctx.arc(25,-5,1.5,0,Math.PI*2);ctx.fill();
+        ctx.strokeStyle='#17151d';ctx.lineWidth=4.5;ctx.lineCap='round';ctx.lineJoin='round';
+        if(jumping){[[-12,-21,19,-27,17],[-4,-13,21,-18,20],[8,12,20,18,17],[15,17,22,24,17]].forEach(([x1,x2,y1,x3,y2])=>{ctx.beginPath();ctx.moveTo(x1,10);ctx.lineTo(x2,y1);ctx.lineTo(x3,y2);ctx.stroke();});}
+        else{ctx.beginPath();ctx.moveTo(-13,9);ctx.lineTo(-15+swing,17);ctx.lineTo(-18+swing,21);ctx.stroke();ctx.beginPath();ctx.moveTo(-4,11);ctx.lineTo(-5-swing,18);ctx.lineTo(-8-swing,22);ctx.stroke();ctx.beginPath();ctx.moveTo(8,10);ctx.lineTo(10-swing,18);ctx.lineTo(13-swing,22);ctx.stroke();ctx.beginPath();ctx.moveTo(15,8);ctx.lineTo(17+swing,17);ctx.lineTo(20+swing,21);ctx.stroke();}
+        if(equippedOutfit){const accessory=clothingCatalog.find(item=>item.name===equippedOutfit);if(accessory){ctx.font='25px "Apple Color Emoji","Segoe UI Emoji",sans-serif';ctx.fillText(accessory.emoji,7,-31);}}
       }
-      if(equippedOutfit){const accessory=clothingCatalog.find(item=>item.name===equippedOutfit);if(accessory){ctx.font='25px "Apple Color Emoji","Segoe UI Emoji",sans-serif';ctx.fillText(accessory.emoji,7,-31);}}if(equippedOutfit==='Dragon Skin'){ctx.font='27px "Apple Color Emoji","Segoe UI Emoji",sans-serif';ctx.fillText('🐉',-5,-32);}if(equippedOutfit==='Piggy'){ctx.font='27px "Apple Color Emoji","Segoe UI Emoji",sans-serif';ctx.fillText('🐷',-5,-32);}
       ctx.restore();
     }
     function draw(){
