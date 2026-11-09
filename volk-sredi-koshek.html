@@ -55,12 +55,13 @@ function riverEpisode(){
  const scene=document.getElementById('scene');
  scene.style.background='linear-gradient(#b9dce8 0 27%,#4e9db8 27% 100%)';
  const hero=document.querySelector('.avatar').src;
- scene.innerHTML='<div class="speech" id="speech">Ой! Героиня поскользнулась и упала в реку!</div><div style="position:absolute;inset:28% 0 0;background:repeating-linear-gradient(175deg,#65b4c9 0 13px,#4d9bb7 13px 26px)"></div><div style="position:absolute;left:20%;top:48%;width:60%;height:27%;border-radius:50%;background:#a9dce0;opacity:.25"></div><img alt="Героиня в воде" src="'+hero+'" style="position:absolute;left:35%;top:35%;width:30%;height:58%;object-fit:contain;transform:rotate(90deg);z-index:3">';
+ scene.innerHTML='<div class="speech" id="speech">Героиня падает в реку и замечает девочку под водой!</div><div style="position:absolute;inset:28% 0 0;background:repeating-linear-gradient(175deg,#65b4c9 0 13px,#4d9bb7 13px 26px)"></div><svg viewBox="0 0 250 100" aria-label="Девочка в воде" style="position:absolute;width:43%;height:40%;left:48%;top:48%;z-index:2"><circle cx="48" cy="48" r="22" fill="#efc2a7" stroke="#704c50" stroke-width="4"/><path d="M27 44q-2-31 31-23q17 7 9 24" fill="#76514a" stroke="#49343a" stroke-width="5"/><path d="M70 47Q130 19 208 49L214 72Q136 91 70 65Z" fill="#e5a0b4" stroke="#684652" stroke-width="5"/></svg><img alt="Героиня в воде" src="'+hero+'" style="position:absolute;left:8%;top:37%;width:30%;height:58%;object-fit:contain;transform:rotate(90deg);z-index:3">';
  choices.hidden=true;next.hidden=true;
- say('Героиня случайно упала в реку. Нужно решить, что делать!');
+ say('Героиня упала в реку и увидела девочку, которая, по сюжету, уже три дня находится без сознания под водой. Что она сделает?');
  buttons([
- ['Позвать спасателей',()=>{say('Героиня зовёт на помощь и старается держаться в безопасном месте. Спасатели слышат её и направляют к ней лодку.');buttons([['Продолжить',()=>finish('Спасатели помогают героине выбраться из воды. Она в безопасности и благодарит их за помощь.'),'green']])},'green'],
- ['Доплыть до берега',()=>{say('Героиня выбирает ближайший берег и добирается до него. Она выбирается из воды и отдыхает на суше. Спасателей она не вызывает.');buttons([['Продолжить',()=>finish('Героиня уже на берегу. Она в безопасности и продолжает приключение.'),'green']])},'alt']
+ ['Позвать спасателей',()=>{say('Героиня зовёт спасателей. Они прибывают на лодке и помогают девочке и героине.');buttons([['Продолжить',()=>finish('Девочку передают медикам, а героиню осматривают. Обе в безопасности.'),'green']])},'green'],
+ ['Доплыть до берега самой',()=>{say('Героиня выбирается на берег одна и сразу сообщает спасателям, где находится девочка.');buttons([['Продолжить',()=>finish('Спасатели отправляются за девочкой. Героиня ждёт на берегу и показывает им место.'),'green']])},'alt'],
+ ['Забрать девочку и выплыть самой',()=>{say('В этой сказочной истории волшебный пузырь реки всё это время окружал девочку и сохранял ей воздух. Героиня помогает ей выбраться, и обе оказываются у берега. В реальной жизни нельзя пытаться спасать человека из воды самостоятельно — нужно звать спасателей.');buttons([['Продолжить',()=>finish('На берегу девочку сразу передают медикам. Героиня тоже получает помощь после падения в воду.'),'green']])},'gold']
  ]);
 }
 choices.addEventListener('click',e=>{const action=e.target.dataset.action;if(!action)return;choices.hidden=true;
