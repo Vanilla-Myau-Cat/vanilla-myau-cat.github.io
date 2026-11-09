@@ -124,7 +124,7 @@
           <button class="game-btn" id="startGame" type="button">▶ Start game</button>
           <button class="game-btn secondary" id="jumpGame" type="button">⬆ Jump!</button>
           <button class="game-btn time" id="stopTimeGame" type="button">⏳ Stop time (10 💎)</button>
-          <button class="game-btn secondary" id="openShop" type="button">🛍️ Open shop</button><button class="game-btn dragon-btn" id="dragonPower" type="button" hidden>🐉 Dragon power</button><button class="game-btn" id="pigPower" type="button" hidden>🐷 Pig kick</button><button class="game-btn" id="eagleFly" type="button" hidden>🦅 Полёт (40 сек)</button>
+          <button class="game-btn secondary" id="openShop" type="button">🛍️ Open shop</button><button class="game-btn time" id="restoreSausages" type="button">🍖 Вернуть 134 сосиски</button><button class="game-btn dragon-btn" id="dragonPower" type="button" hidden>🐉 Dragon power</button><button class="game-btn" id="pigPower" type="button" hidden>🐷 Pig kick</button><button class="game-btn" id="eagleFly" type="button" hidden>🦅 Полёт (40 сек)</button>
         </div>
         <div class="game-controls time-choice" id="timeChoiceControls" hidden>
           <button class="game-btn secondary" id="timeForward" type="button">➡ Forward</button>
@@ -151,6 +151,7 @@
     const startBtn = document.getElementById('startGame');
     const jumpBtn = document.getElementById('jumpGame');
     const stopTimeBtn = document.getElementById('stopTimeGame');
+    const restoreSausagesBtn = document.getElementById('restoreSausages');
     const timeChoiceControls = document.getElementById('timeChoiceControls');
     const timeForwardBtn = document.getElementById('timeForward');
     const timeJumpBtn = document.getElementById('timeJump');
@@ -439,6 +440,8 @@
     sausageCrystalsBtn.addEventListener('click',tradeSausagesForCrystal);
     updateStats();showTrades(false);updateTimeButton();refreshShop();updateDragonButton();updateShopClock();setInterval(updateShopClock,30000);
     checkPublishedVersion();
+    restoreSausagesBtn.addEventListener('click',()=>{if(localStorage.getItem('catDashSausageRecovery134')==='yes'){restoreSausagesBtn.disabled=true;restoreSausagesBtn.textContent='✅ Сосиски уже возвращены';return;}snacks+=134;saveLoot();updateStats();localStorage.setItem('catDashSausageRecovery134','yes');restoreSausagesBtn.disabled=true;restoreSausagesBtn.textContent='✅ +134 сосиски возвращены';message.textContent='🍖 Потерянные 134 сосиски возвращены!';});
+    if(localStorage.getItem('catDashSausageRecovery134')==='yes'){restoreSausagesBtn.disabled=true;restoreSausagesBtn.textContent='✅ Сосиски уже возвращены';}
     jumpBtn.addEventListener('click',jump);
     stopTimeBtn.addEventListener('click',stopTime);
     timeForwardBtn.addEventListener('click',()=>chooseTimeAction('forward'));
