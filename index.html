@@ -440,7 +440,7 @@
     sausageCrystalsBtn.addEventListener('click',tradeSausagesForCrystal);
     updateStats();showTrades(false);updateTimeButton();refreshShop();updateDragonButton();updateShopClock();setInterval(updateShopClock,30000);
     checkPublishedVersion();
-    restoreSausagesBtn.addEventListener('click',()=>{if(localStorage.getItem('catDashSausageRecovery134')==='yes'){restoreSausagesBtn.disabled=true;restoreSausagesBtn.textContent='✅ Сосиски уже возвращены';return;}snacks+=134;saveLoot();updateStats();localStorage.setItem('catDashSausageRecovery134','yes');restoreSausagesBtn.disabled=true;restoreSausagesBtn.textContent='✅ +134 сосиски возвращены';message.textContent='🍖 Потерянные 134 сосиски возвращены!';});
+    restoreSausagesBtn.addEventListener('click',()=>{if(Number(localStorage.getItem('catDashSausageRecoveryCount')||0)>=350){restoreSausagesBtn.disabled=true;restoreSausagesBtn.textContent='🍖 Вернуть 134 сосиски ('+Number(localStorage.getItem('catDashSausageRecoveryCount')||0)+'/350)';return;}snacks+=134;saveLoot();updateStats();localStorage.setItem('catDashSausageRecovery134','yes');restoreSausagesBtn.disabled=true;restoreSausagesBtn.textContent='✅ +134 сосиски возвращены';message.textContent='🍖 Потерянные 134 сосиски возвращены!';});
     if(localStorage.getItem('catDashSausageRecovery134')==='yes'){restoreSausagesBtn.disabled=true;restoreSausagesBtn.textContent='✅ Сосиски уже возвращены';}
     jumpBtn.addEventListener('click',jump);
     stopTimeBtn.addEventListener('click',stopTime);
