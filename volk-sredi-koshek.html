@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Волк среди кошек — приключение</title>
+<style>
+:root{--ink:#382b35;--pink:#f28ba6;--red:#b92f3c;--cream:#fff8f0;--green:#b9d5a6}
+*{box-sizing:border-box}body{margin:0;background:linear-gradient(#f7e9e6,#f4f0e8);color:var(--ink);font-family:system-ui,"Trebuchet MS",sans-serif;min-height:100vh}
+main{max-width:900px;margin:auto;padding:24px 16px 50px}header{text-align:center;margin:8px 0 20px}h1{margin:0;font-size:clamp(2rem,7vw,3.5rem)}header p{margin:8px;color:#76636c}
+.game{background:#fff;border:2px solid #eed9d9;border-radius:26px;padding:clamp(14px,3vw,26px);box-shadow:0 12px 32px #694b4b18}
+.scene{position:relative;min-height:310px;border-radius:20px;overflow:hidden;background:linear-gradient(#d9e9f3 0 48%,#b7ceaa 48% 70%,#8f9b8d 70% 100%);display:flex;align-items:end;justify-content:space-around;padding:15px 10px}
+.building{position:absolute;top:18px;left:0;width:100%;height:95px;background:repeating-linear-gradient(90deg,#b9a9a6 0 90px,#c9bbb6 90px 100px);opacity:.7}
+.store{position:absolute;right:15px;top:20px;background:#fff4d9;border:4px solid #b77967;border-radius:10px;padding:10px;font-weight:800;z-index:1}
+.road{position:absolute;bottom:0;height:75px;background:#72747a;width:100%;border-top:6px solid #eee}.road:after{content:"";position:absolute;top:34px;left:0;width:100%;border-top:4px dashed #f8f0d7}
+.person{z-index:2;font-size:74px;filter:drop-shadow(0 4px 2px #493b3b30)}
+.avatar{width:150px;height:230px;z-index:3;position:relative;flex:none}
+.victim{z-index:2;font-size:50px;align-self:end;margin-bottom:55px;filter:grayscale(.25)}
+.car{z-index:2;font-size:60px;align-self:end;margin-bottom:58px}
+.speech{position:absolute;z-index:4;top:12px;left:12px;right:12px;text-align:center;font-weight:800;background:#ffffffd9;border-radius:14px;padding:9px}
+.cardrow{display:flex;gap:12px;align-items:center;justify-content:center;flex-wrap:wrap;margin:15px 0}
+.story{text-align:center;font-size:1.08rem;line-height:1.6;margin:18px auto;max-width:700px}
+.choices{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:10px;margin-top:18px}
+button{border:0;border-radius:15px;padding:13px 15px;background:var(--red);color:white;font:700 1rem system-ui;cursor:pointer;box-shadow:0 4px 0 #85212c}
+button.alt{background:#66578c;box-shadow:0 4px 0 #473a68}button.green{background:#56875c;box-shadow:0 4px 0 #37613d}button.gold{background:#bd7c37;box-shadow:0 4px 0 #8d5723}button:disabled{opacity:.5;cursor:default}
+.inventory{display:none;margin:14px auto;padding:14px;border:2px dashed #d5a2a7;border-radius:16px;background:#fff8f2;text-align:center;max-width:500px}
+.inventory.show{display:block}.bandages{font-size:34px;letter-spacing:8px;animation:pop .5s ease both}
+@keyframes pop{from{transform:scale(.4);opacity:0}to{transform:scale(1);opacity:1}}
+footer{text-align:center;color:#816e76;font-size:.9rem;margin-top:16px}
+@media(max-width:500px){.scene{min-height:270px}.avatar{width:118px}.store{font-size:.8rem}.person{font-size:58px}}
+</style></head>
+<body><main><header><h1>🐾 Волк среди кошек</h1><p>История, в которой каждый выбор меняет события</p></header>
+<section class="game"><div class="scene" id="scene">
+<div class="building"></div><div class="store">🏪 Магазин<br><small>камера наблюдения</small></div>
+<div class="speech" id="speech">Героиня спокойно идёт по улице…</div>
+<div class="avatar" aria-label="Героиня с ушками, коричневыми волосами и красной маской">
+<svg viewBox="0 0 160 240" width="100%" height="100%" role="img">
+<path d="M25 65 L14 5 Q43 16 56 48 L105 48 Q123 13 148 3 L137 76" fill="#76513f" stroke="#30242a" stroke-width="5"/>
+<path d="M24 22 L40 48 L30 46Z M139 20 L121 49 L133 43Z" fill="#fff0e6"/>
+<path d="M36 54 Q80 22 126 58 L139 135 Q126 180 80 182 Q30 171 22 128Z" fill="#8b6048" stroke="#30242a" stroke-width="5"/>
+<path d="M95 44 Q112 74 96 126 Q91 145 78 158" fill="none" stroke="#8c39d8" stroke-width="7"/>
+<path d="M31 69 Q55 34 83 52 Q49 90 36 136Z" fill="#593c33"/>
+<path d="M18 116 Q80 91 142 116 L137 145 Q79 165 23 145Z" fill="#b92f3c" stroke="#30242a" stroke-width="5"/>
+<path d="M28 121 L42 110 L50 121 L60 110 L70 121 L80 110 L90 121 L100 110 L110 121 L120 110 L133 122" fill="none" stroke="#b8e4f1" stroke-width="5"/>
+<circle cx="27" cy="129" r="10" fill="#fff" stroke="#30242a" stroke-width="3"/><circle cx="133" cy="129" r="10" fill="#fff" stroke="#30242a" stroke-width="3"/>
+<path d="M20 182 Q80 166 140 182 L133 226 L28 226Z" fill="#9f2631" stroke="#30242a" stroke-width="5"/>
+<path d="M27 218 L12 236 M42 221 L34 239 M132 218 L145 236" stroke="#a82d3c" stroke-width="7" stroke-linecap="round"/>
+<path d="M119 181 Q157 187 150 220 Q145 240 119 231" fill="none" stroke="#76513f" stroke-width="16" stroke-linecap="round"/>
+</svg></div>
+<div class="victim" id="victim">🧍</div><div class="car" id="car">🚗</div><div class="road"></div></div>
+<p class="story" id="story">Впереди героиня замечает человека, которому нужна помощь после дорожной аварии. Она останавливается и думает, что делать.</p>
+<div class="inventory" id="kit"><strong>🧰 Аптечка открыта!</strong><div class="bandages">🩹 🩹 🩹</div><p>Героиня достала бинты и подготовила аптечку. Она остаётся рядом с пострадавшим.</p></div>
+<div class="choices" id="choices">
+<button class="green" data-action="help">Подойти и помочь самой</button>
+<button class="alt" data-action="ambulance">Вызвать скорую и помочь</button>
+<button class="gold" data-action="police">Вызвать полицию и помочь</button>
+<button data-action="ignore">Пройти мимо</button>
+</div>
+<div class="choices" id="next" hidden></div>
+</section><footer>Демо-версия • Новые препятствия и истории можно добавлять постепенно</footer></main>
+<script>
+const story=document.getElementById('story'),speech=document.getElementById('speech'),choices=document.getElementById('choices'),next=document.getElementById('next'),kit=document.getElementById('kit'),victim=document.getElementById('victim'),car=document.getElementById('car');
+function say(text){story.textContent=text;speech.textContent=text}
+function buttons(items){next.hidden=false;next.innerHTML='';items.forEach(([label,fn,cls])=>{const b=document.createElement('button');b.textContent=label;b.className=cls||'alt';b.onclick=fn;next.appendChild(b)})}
+function openKit(after){choices.hidden=true;next.hidden=true;kit.classList.add('show');say('Героиня достаёт аптечку и бинты. Она спокойно остаётся рядом и ждёт дальнейшей помощи.');buttons([['Продолжить',after,'green']])}
+function finish(text){kit.classList.remove('show');say(text);buttons([['Начать эпизод заново',()=>location.reload(),'green']])}
+choices.addEventListener('click',e=>{const action=e.target.dataset.action;if(!action)return;choices.hidden=true;
+if(action==='help'){openKit(()=>finish('Героиня помогла чем могла и осталась рядом, пока пострадавшему не стало спокойнее. Эпизод завершён.'))}
+if(action==='ambulance'){say('Героиня звонит в скорую помощь и сообщает, где произошла авария. Затем подходит к пострадавшему.');openKit(()=>{say('Героиня ждёт рядом. Приезжает скорая помощь, специалисты помогают пострадавшему. Вскоре приезжает полиция и начинает выяснять обстоятельства.');buttons([['Пойти дальше',()=>finish('Пострадавший под присмотром специалистов, полиция разбирается в случившемся. Героиня продолжает путь.'),'green']])})}
+if(action==='police'){say('Героиня вызывает полицию, сообщает об аварии и подходит помочь.');openKit(()=>{say('Полиция приезжает и начинает разбираться в обстоятельствах. Для пострадавшего также вызывают скорую помощь.');buttons([['Пойти дальше',()=>finish('Пострадавшему помогают специалисты, а полиция выясняет, что произошло. Героиня продолжает путь.'),'green']])})}
+if(action==='ignore'){victim.textContent='🧍‍♂️';car.textContent='🚗';say('Героиня проходит мимо. Камера у магазина записывает её рядом с местом аварии. Позже полиция хочет задать ей несколько вопросов.');buttons([['Объяснить, что произошло',()=>{say('В участке героиня спокойно рассказывает, где была и что видела. Полицейские проверяют запись камеры и понимают, что она не была за рулём.');buttons([['Продолжить путь',()=>finish('Недоразумение разрешилось. Героиню отпускают, и она продолжает свой путь.'),'green']])},'green'],['Попросить проверить запись камеры',()=>{say('Полицейские проверяют запись. На ней видно, что героиня шла по тротуару, а не управляла машиной.');buttons([['Продолжить путь',()=>finish('Полиция разобралась в ошибке. Героиня свободна и продолжает путь.'),'green']])},'alt']])}
+});
+</script></body></html>
