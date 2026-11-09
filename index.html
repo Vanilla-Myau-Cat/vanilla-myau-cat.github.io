@@ -122,7 +122,7 @@
           <button class="game-btn" id="startGame" type="button">▶ Start game</button>
           <button class="game-btn secondary" id="jumpGame" type="button">⬆ Jump!</button>
           <button class="game-btn time" id="stopTimeGame" type="button">⏳ Stop time (10 💎)</button>
-          <button class="game-btn secondary" id="openShop" type="button">🛍️ Open shop</button><button class="game-btn dragon-btn" id="dragonPower" type="button" hidden>🐉 Dragon power</button>
+          <button class="game-btn secondary" id="openShop" type="button">🛍️ Open shop</button><button class="game-btn dragon-btn" id="dragonPower" type="button" hidden>🐉 Dragon power</button><button class="game-btn" id="pigPower" type="button" hidden>🐷 Pig kick</button>
         </div>
         <div class="game-controls time-choice" id="timeChoiceControls" hidden>
           <button class="game-btn secondary" id="timeForward" type="button">➡ Forward</button>
@@ -158,7 +158,7 @@
     const distanceScore = document.getElementById('distanceScore');
     const pineappleScore = document.getElementById('pineappleScore');
     const crystalScore = document.getElementById('crystalScore');
-    const openShopBtn=document.getElementById('openShop'),clothingShop=document.getElementById('clothingShop');const openCrateBtn=document.getElementById('openCrate'),crateMessage=document.getElementById('crateMessage'),dragonPowerBtn=document.getElementById('dragonPower');
+    const openShopBtn=document.getElementById('openShop'),clothingShop=document.getElementById('clothingShop');const openCrateBtn=document.getElementById('openCrate'),crateMessage=document.getElementById('crateMessage'),dragonPowerBtn=document.getElementById('dragonPower'),pigPowerBtn=document.getElementById('pigPower');
     openShopBtn.addEventListener('click',()=>{clothingShop.hidden=!clothingShop.hidden;openShopBtn.textContent=clothingShop.hidden?'🛍️ Open shop':'✖ Close shop';if(!clothingShop.hidden)clothingShop.scrollIntoView({behavior:'smooth',block:'start'});});
     const cookieScore=document.getElementById('cookieScore'),shopItemsEl=document.getElementById('shopItems'),shopTimerEl=document.getElementById('shopTimer'),equippedOutfitEl=document.getElementById('equippedOutfit');
     const afterControls = document.getElementById('afterGameControls');
@@ -196,7 +196,7 @@
     let state = 'ready', last = 0, elapsed = 0, obstacleTimer = 0, snackTimer = 0;
     let distance = 0, snacks = loadLoot('catDashSausages'), pineapples = loadLoot('catDashPineapples'), crystals = loadCrystals(), cookies=loadLoot('catDashCookies'),speed=330,traded=false;
     const clothingCatalog=[{name:'Pink Bow',emoji:'🎀',tier:'ordinary'},{name:'Tiny Crown',emoji:'👑',tier:'ordinary'},{name:'Blue Scarf',emoji:'🧣',tier:'ordinary'},{name:'Flower Hat',emoji:'🌸',tier:'ordinary'},{name:'Galaxy Wings',emoji:'🪽',tier:'legendary'},{name:'Rainbow Crown',emoji:'🌈',tier:'legendary'},{name:'Star Cape',emoji:'✨',tier:'legendary'},{name:'Magic Halo',emoji:'😇',tier:'legendary'}];
-    let shopStock=[],shopRefreshAt=0,ownedClothes=loadOwnedClothes(),equippedOutfit=loadEquipped();const SHOP_INTERVAL=10*60*60*1000;let dragonCooldownUntil=0;
+    let shopStock=[],shopRefreshAt=0,ownedClothes=loadOwnedClothes(),equippedOutfit=loadEquipped();const SHOP_INTERVAL=10*60*60*1000;let dragonCooldownUntil=0,pigCooldownUntil=0;
     function loadOwnedClothes(){try{return JSON.parse(localStorage.getItem('catDashClothes')||'[]');}catch(e){return [];}}
     function loadEquipped(){try{return localStorage.getItem('catDashEquipped')||'';}catch(e){return '';}}
     function saveClothes(){try{localStorage.setItem('catDashClothes',JSON.stringify(ownedClothes));localStorage.setItem('catDashEquipped',equippedOutfit);}catch(e){}}
@@ -272,8 +272,8 @@
     function updateStats(){sausageScore.textContent=snacks;pineappleScore.textContent=pineapples;crystalScore.textContent=crystals;cookieScore.textContent=cookies;}
     function hasDragon(){return ownedClothes.includes('Dragon Skin');}
     function updateDragonButton(){dragonPowerBtn.hidden=!hasDragon();const left=Math.max(0,dragonCooldownUntil-Date.now());dragonPowerBtn.disabled=left>0;dragonPowerBtn.textContent=left>0?'🐉 Recharge '+Math.ceil(left/1000)+'s':'🐉 Dragon power (30 🍉)';}
-    openCrateBtn.addEventListener('click',()=>{if(cookies<3){crateMessage.textContent='Нужно 3 печеньки 🍪';return;}if(hasDragon()){crateMessage.textContent='Дракон уже у тебя!';return;}cookies-=3;saveCookies();ownedClothes.push('Dragon Skin');equippedOutfit='Dragon Skin';saveClothes();crateMessage.textContent='🎉 Выпал Dragon Skin! Сила дракона разблокирована! 🐉';updateStats();renderShop();updateDragonButton();});
-    let dragonDestroyRemaining=0;dragonPowerBtn.addEventListener('click',()=>{if(!hasDragon()||Date.now()<dragonCooldownUntil||dragonDestroyRemaining>0)return;dragonDestroyRemaining=30;dragonCooldownUntil=Date.now()+5000;message.textContent='🐉 Дракон готовится уничтожить 30 арбузов!';updateDragonButton();});setInterval(updateDragonButton,250);
+    openCrateBtn.addEventListener('click',()=>{if(cookies<3){crateMessage.textContent='Нужно 3 печеньки 🍪';return;}cookies-=3;saveCookies();const drop=Math.random()<0.75?'Piggy':'Dragon Skin';if(ownedClothes.includes(drop)){cookies+=5;saveCookies();crateMessage.textContent='🔁 Повторка '+(drop==='Piggy'?'🐷 свинки':'🐉 дракона')+'! +5 🍪 печенек!';}else{ownedClothes.push(drop);equippedOutfit=drop;saveClothes();crateMessage.textContent=drop==='Piggy'?'🎉 Выпала свинка 🐷! Она умеет пинать 20 арбузов!':'🎉 Выпал Dragon Skin! Сила дракона разблокирована! 🐉';}updateStats();renderShop();updateDragonButton();});
+    let dragonDestroyRemaining=0,pigDestroyRemaining=0;dragonPowerBtn.addEventListener('click',()=>{if(!hasDragon()||Date.now()<dragonCooldownUntil||dragonDestroyRemaining>0)return;dragonDestroyRemaining=30;dragonCooldownUntil=Date.now()+5000;message.textContent='🐉 Дракон готовится уничтожить 30 арбузов!';updateDragonButton();});pigPowerBtn.addEventListener('click',()=>{if(!hasPig()||Date.now()<pigCooldownUntil||pigDestroyRemaining>0)return;pigDestroyRemaining=20;pigCooldownUntil=Date.now()+10000;message.textContent='🐷 Свинка приготовилась пнуть 20 арбузов!';updateDragonButton();});setInterval(updateDragonButton,250);
     function showTrades(show){afterControls.hidden=!show;reviveBtn.disabled=crystals<5;pineappleSausagesBtn.disabled=pineapples<1||traded;pineappleCrystalsBtn.disabled=pineapples<20||traded;sausageCrystalsBtn.disabled=snacks<20||traded;}
     function reset(){
       elapsed=0; obstacleTimer=0; snackTimer=0; distance=0; speed=330;traded=false;
@@ -344,7 +344,7 @@
         ctx.beginPath();ctx.moveTo(8,10);ctx.lineTo(10-swing,18);ctx.lineTo(13-swing,22);ctx.stroke();
         ctx.beginPath();ctx.moveTo(15,8);ctx.lineTo(17+swing,17);ctx.lineTo(20+swing,21);ctx.stroke();
       }
-      if(equippedOutfit){const accessory=clothingCatalog.find(item=>item.name===equippedOutfit);if(accessory){ctx.font='25px "Apple Color Emoji","Segoe UI Emoji",sans-serif';ctx.fillText(accessory.emoji,7,-31);}}if(equippedOutfit==='Dragon Skin'){ctx.font='27px "Apple Color Emoji","Segoe UI Emoji",sans-serif';ctx.fillText('🐉',-5,-32);}
+      if(equippedOutfit){const accessory=clothingCatalog.find(item=>item.name===equippedOutfit);if(accessory){ctx.font='25px "Apple Color Emoji","Segoe UI Emoji",sans-serif';ctx.fillText(accessory.emoji,7,-31);}}if(equippedOutfit==='Dragon Skin'){ctx.font='27px "Apple Color Emoji","Segoe UI Emoji",sans-serif';ctx.fillText('🐉',-5,-32);}if(equippedOutfit==='Piggy'){ctx.font='27px "Apple Color Emoji","Segoe UI Emoji",sans-serif';ctx.fillText('🐷',-5,-32);}
       ctx.restore();
     }
     function draw(){
@@ -396,7 +396,7 @@
         cat.vy+=1650*dt;cat.y+=cat.vy*dt;
         if(cat.y>=ground-cat.h){cat.y=ground-cat.h;cat.vy=0;cat.onGround=true;if(direction===-1&&backwardJumps>=5){direction=1;backwardJumps=0;message.textContent='Пятый прыжок завершён — кот снова бежит вперёд! ➡';}}
         obstacleTimer+=dt;snackTimer+=dt;
-        if(obstacleTimer>Math.max(.9,1.45-elapsed*.008)){obstacleTimer=0;obstacles.push({x:W+20,y:ground-43,w:45,h:43});if(dragonDestroyRemaining>0){obstacles.pop();dragonDestroyRemaining--;message.textContent='🐉 Дракон! Осталось уничтожить '+dragonDestroyRemaining+' 🍉';if(dragonDestroyRemaining===0)message.textContent='🐉 Дракон уничтожил 30 арбузов!';}}
+        if(obstacleTimer>Math.max(.9,1.45-elapsed*.008)){obstacleTimer=0;obstacles.push({x:W+20,y:ground-43,w:45,h:43});if(dragonDestroyRemaining>0){obstacles.pop();dragonDestroyRemaining--;message.textContent='🐉 Дракон! Осталось уничтожить '+dragonDestroyRemaining+' 🍉';if(dragonDestroyRemaining===0)message.textContent='🐉 Дракон уничтожил 30 арбузов!';}else if(pigDestroyRemaining>0){obstacles.pop();pigDestroyRemaining--;message.textContent='🐷 Пинок! Осталось '+pigDestroyRemaining+' 🍉';if(pigDestroyRemaining===0)message.textContent='🐷 Свинка пнула 20 арбузов!';}}
         if(snackTimer>1.05){snackTimer=0;const roll=Math.random();const kind=roll<0.12?'crystal':roll<0.30?'pineapple':roll<0.48?'cookie':'sausage';snacksInAir.push({x:W+20,y:ground-105-Math.random()*62,w:40,h:35,taken:false,kind});}
         obstacles.forEach(o=>o.x-=speed*dt);
         snacksInAir.forEach(s=>s.x-=speed*dt);
