@@ -317,6 +317,14 @@
     function drawCat(cx,cy,time,jumping){
       ctx.save();ctx.translate(cx,cy);
       const run=Math.sin(time*17),swing=run*6;
+      // Rainbow Crown leaves a colorful trail behind the running kitty.
+      if(equippedOutfit==='Rainbow Crown'){
+        const rainbow=['#ff4d6d','#ff9f1c','#ffe66d','#4ecdc4','#4d96ff','#a66cff'];
+        ctx.save();ctx.globalAlpha=.82;ctx.lineCap='round';
+        rainbow.forEach((color,i)=>{ctx.strokeStyle=color;ctx.lineWidth=3.2;ctx.beginPath();ctx.moveTo(-15,2+i*2);ctx.quadraticCurveTo(-28,-4+i*2+run*3,-43,-1+i*2+run*4);ctx.stroke();});
+        for(let i=0;i<5;i++){ctx.fillStyle=rainbow[i%rainbow.length];ctx.beginPath();ctx.arc(-31-i*3,8+Math.sin(time*9+i)*3,1.7,0,Math.PI*2);ctx.fill();}
+        ctx.restore();
+      }
       if(equippedOutfit==='Piggy'){
         // Pig transformation: pink round body, pig face, ears and curly tail
         ctx.fillStyle='#f49bb5';ctx.beginPath();ctx.ellipse(-2,3,22,15,0,0,Math.PI*2);ctx.fill();
