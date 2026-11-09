@@ -49,7 +49,21 @@ const story=document.getElementById('story'),speech=document.getElementById('spe
 function say(text){story.textContent=text;speech.textContent=text}
 function buttons(items){next.hidden=false;next.innerHTML='';items.forEach(([label,fn,cls])=>{const b=document.createElement('button');b.textContent=label;b.className=cls||'alt';b.onclick=fn;next.appendChild(b)})}
 function openKit(after){choices.hidden=true;next.hidden=true;kit.classList.add('show');say('Героиня достаёт аптечку и бинты. Она спокойно остаётся рядом и ждёт дальнейшей помощи.');buttons([['Продолжить',after,'green']])}
-function finish(text){kit.classList.remove('show');say(text);buttons([['Начать эпизод заново',()=>location.reload(),'green']])}
+function finish(text){kit.classList.remove('show');say(text);buttons([['Продолжить приключение',riverEpisode,'green'],['Начать сначала',()=>location.reload(),'alt']])}
+function riverEpisode(){
+ kit.classList.remove('show');
+ const scene=document.getElementById('scene');
+ scene.style.background='linear-gradient(#b9dce8 0 27%,#4e9db8 27% 100%)';
+ const hero=document.querySelector('.avatar').src;
+ scene.innerHTML='<div class="speech" id="speech">Героиня идёт вдоль реки и замечает девочку без сознания в воде!</div><div style="position:absolute;inset:28% 0 0;background:repeating-linear-gradient(175deg,#65b4c9 0 13px,#4d9bb7 13px 26px)"></div><svg viewBox="0 0 250 100" aria-label="Девочка лежит в воде" style="position:absolute;width:48%;height:42%;left:37%;top:43%;z-index:2"><ellipse cx="125" cy="52" rx="110" ry="34" fill="#a9dce0" opacity=".35"/><circle cx="48" cy="48" r="22" fill="#efc2a7" stroke="#704c50" stroke-width="4"/><path d="M27 44q-2-31 31-23q17 7 9 24" fill="#76514a" stroke="#49343a" stroke-width="5"/><path d="M70 47Q130 19 208 49L214 72Q136 91 70 65Z" fill="#e5a0b4" stroke="#684652" stroke-width="5"/><path d="M91 48l-18-20M91 65l-19 16" stroke="#efc2a7" stroke-width="12" stroke-linecap="round"/></svg><img alt="Героиня" src="'+hero+'" style="position:absolute;left:2%;bottom:5px;width:25%;height:68%;object-fit:contain;z-index:3">';
+ choices.hidden=true;next.hidden=true;
+ story.textContent='Девочка без сознания находится в реке. Как поступить? Самый безопасный вариант — позвать спасателей, не входя в воду.';
+ buttons([
+ ['Нырнуть за девочкой',()=>{say('Героиня понимает, что течение опасно, и зовёт спасателей. Лодка быстро подплывает и помогает обеим выбраться.');buttons([['Продолжить',()=>finish('Девочку и героиню доставили в безопасное место. Медики занялись девочкой. Обе теперь в безопасности.'),'green']])},'gold'],
+ ['Подать сигнал спасателям',()=>{say('Героиня громко зовёт на помощь и подаёт сигнал. Вскоре появляется спасательная лодка.');buttons([['Посмотреть дальше',()=>{say('Спасатели забирают девочку из воды и помогают героине подняться в лодку. Обеих доставляют на берег, девочку передают медикам.');buttons([['Продолжить приключение',()=>finish('Спасатели и медики помогли девочке. Героиня убедилась, что всё под контролем, и отправилась дальше.'),'green']])},'green']])},'green'],
+ ['Проплыть мимо',()=>{say('Героиня отплывает, но понимает, что девочке нужна срочная помощь. Она зовёт спасателей.');buttons([['Позвать спасателей',()=>{say('Спасательная лодка прибывает и забирает девочку из воды. Героиня показывает спасателям, где заметила её.');buttons([['Продолжить',()=>finish('Девочку передали медикам. Героиня продолжает путь.'),'green']])},'green']])},'alt']
+ ]);
+}
 choices.addEventListener('click',e=>{const action=e.target.dataset.action;if(!action)return;choices.hidden=true;
 if(action==='help'){openKit(()=>finish('Героиня помогла чем могла и осталась рядом, пока пострадавшему не стало спокойнее. Эпизод завершён.'))}
 if(action==='ambulance'){say('Героиня звонит в скорую помощь и сообщает, где произошла авария. Затем подходит к пострадавшему.');openKit(()=>{say('Героиня ждёт рядом. Приезжает скорая помощь, специалисты помогают пострадавшему. Вскоре приезжает полиция и начинает выяснять обстоятельства.');buttons([['Пойти дальше',()=>finish('Пострадавший под присмотром специалистов, полиция разбирается в случившемся. Героиня продолжает путь.'),'green']])})}
